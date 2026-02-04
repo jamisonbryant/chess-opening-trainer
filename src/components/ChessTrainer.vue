@@ -11,6 +11,7 @@ import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
 import { buildEvaluationPrompt, type AiProvider } from '../services/ai'
 import OpeningSelector from './OpeningSelector.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import TrainingPanel from './TrainingPanel.vue'
 
 const training = useTrainingStore()
@@ -212,6 +213,7 @@ async function handleExplanation(explanation: string) {
   <div class="chess-trainer">
     <aside class="sidebar-left">
       <OpeningSelector />
+      <SettingsPanel />
     </aside>
 
     <main class="board-area">
