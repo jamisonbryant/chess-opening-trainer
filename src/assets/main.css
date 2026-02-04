@@ -1,0 +1,647 @@
+/* ==========================================================================
+   Chess Opening Trainer - Main Stylesheet
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Custom Properties
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Background palette */
+  --bg-deep: #0f0f1a;
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --bg-card: #1e1e3f;
+  --bg-card-hover: #262650;
+  --bg-card-active: #2a2a5a;
+  --bg-input: #12122a;
+
+  /* Accent palette */
+  --accent-red: #e94560;
+  --accent-gold: #e2b659;
+  --accent-amber: #f5b041;
+  --accent-gold-dim: #c9a240;
+
+  /* Text palette */
+  --text-primary: #eeeeee;
+  --text-secondary: #cccccc;
+  --text-muted: #aaaaaa;
+  --text-faint: #777777;
+
+  /* Message role colors */
+  --msg-trainer-bg: #1a2744;
+  --msg-trainer-border: #2a5298;
+  --msg-user-bg: #1a3324;
+  --msg-user-border: #2d8a4e;
+  --msg-system-bg: #252530;
+  --msg-system-border: #44445a;
+
+  /* Borders & misc */
+  --border-color: #2a2a4a;
+  --border-radius: 8px;
+  --border-radius-sm: 4px;
+  --border-radius-lg: 12px;
+
+  /* Typography */
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+
+  /* Sizing */
+  --sidebar-width: 280px;
+  --panel-width: 360px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   Reset & Base
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  margin: 0 0 0.5em;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-gold);
+}
+
+h3 {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+p {
+  margin: 0 0 0.5em;
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent-gold);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-amber);
+}
+
+/* --------------------------------------------------------------------------
+   Form Controls
+   -------------------------------------------------------------------------- */
+
+select,
+input,
+textarea {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  border-color: var(--accent-gold);
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: var(--font-sans);
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--bg-deep);
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   Main Layout - Chess Trainer Grid
+   -------------------------------------------------------------------------- */
+
+.chess-trainer {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--panel-width);
+  gap: 0;
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   Left Sidebar
+   -------------------------------------------------------------------------- */
+
+.sidebar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background-color: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   Board Area (Center)
+   -------------------------------------------------------------------------- */
+
+.board-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--bg-deep);
+  min-height: 100vh;
+}
+
+.board-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.board-header h1 {
+  margin-bottom: 0.15em;
+}
+
+.board-header span {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+/* --------------------------------------------------------------------------
+   Right Sidebar
+   -------------------------------------------------------------------------- */
+
+.sidebar-right {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+  max-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   Opening Selector
+   -------------------------------------------------------------------------- */
+
+.opening-selector {
+  padding: 1.25rem;
+}
+
+.opening-selector h2 {
+  margin-bottom: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Opening Cards
+   -------------------------------------------------------------------------- */
+
+.opening-card {
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.opening-card:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--accent-gold-dim);
+  transform: translateX(2px);
+}
+
+.opening-card.active {
+  background-color: var(--bg-card-active);
+  border-color: var(--accent-gold);
+  box-shadow: inset 3px 0 0 var(--accent-gold);
+}
+
+.opening-card h3 {
+  margin-bottom: 0.25em;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.opening-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   Color Badge
+   -------------------------------------------------------------------------- */
+
+.color-badge {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold-dim);
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Progress Section
+   -------------------------------------------------------------------------- */
+
+.progress-section {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.progress-section h3 {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.progress-section p {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-amber));
+  border-radius: 3px;
+  transition: width 400ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   Training Panel
+   -------------------------------------------------------------------------- */
+
+.training-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.training-panel h2 {
+  flex-shrink: 0;
+  margin-bottom: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Messages Container
+   -------------------------------------------------------------------------- */
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  margin-bottom: 1rem;
+
+  /* Thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.messages::-webkit-scrollbar {
+  width: 5px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Message Bubbles
+   -------------------------------------------------------------------------- */
+
+.message {
+  margin-bottom: 0.75rem;
+  animation: messageSlideIn 200ms ease;
+}
+
+.message-content {
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  border-radius: var(--border-radius);
+  border-left: 3px solid transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Trainer messages */
+.message.trainer .message-content {
+  background-color: var(--msg-trainer-bg);
+  border-left-color: var(--msg-trainer-border);
+  color: var(--text-primary);
+}
+
+/* User messages */
+.message.user .message-content {
+  background-color: var(--msg-user-bg);
+  border-left-color: var(--msg-user-border);
+  color: var(--text-primary);
+}
+
+/* System messages */
+.message.system .message-content {
+  background-color: var(--msg-system-bg);
+  border-left-color: var(--msg-system-border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Input Area
+   -------------------------------------------------------------------------- */
+
+.input-area {
+  flex-shrink: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.input-area .prompt {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.input-area textarea {
+  margin-bottom: 0.5rem;
+}
+
+.input-area button {
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Loading & Complete States
+   -------------------------------------------------------------------------- */
+
+.loading {
+  flex-shrink: 0;
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  animation: loadingPulse 1.5s ease infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.complete {
+  flex-shrink: 0;
+  padding: 1.25rem;
+  text-align: center;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius);
+}
+
+.complete h3 {
+  color: var(--accent-gold);
+  margin-bottom: 0.25em;
+}
+
+.complete p {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.complete button {
+  margin-top: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   Settings Panel
+   -------------------------------------------------------------------------- */
+
+.settings-panel {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.settings-panel h3 {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.settings-panel .field {
+  margin-bottom: 0.75rem;
+}
+
+.settings-panel .field label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   Chessboard Overrides
+   -------------------------------------------------------------------------- */
+
+/* Constrain board to a reasonable max size within the center area */
+.board-area .main-wrap {
+  max-width: min(70vh, 560px);
+  max-height: min(70vh, 560px);
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive: Tablet & Below (single column)
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .chess-trainer {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .sidebar-left {
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .sidebar-left > * {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .board-area {
+    min-height: auto;
+    padding: 1rem;
+  }
+
+  .sidebar-right {
+    max-height: none;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .training-panel {
+    height: auto;
+    max-height: 50vh;
+  }
+
+  .messages {
+    max-height: 30vh;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Small Screens
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .sidebar-left {
+    flex-direction: column;
+  }
+
+  .sidebar-left > * {
+    min-width: 0;
+  }
+
+  .board-area {
+    padding: 0.5rem;
+  }
+
+  .board-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .opening-card {
+    padding: 0.625rem 0.75rem;
+  }
+}
