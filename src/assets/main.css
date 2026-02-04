@@ -286,6 +286,65 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
+   Typeahead
+   -------------------------------------------------------------------------- */
+
+.typeahead {
+  position: relative;
+}
+
+.typeahead input {
+  width: 100%;
+}
+
+.typeahead .dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  z-index: 100;
+}
+
+.typeahead .dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-fast);
+}
+
+.typeahead .dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.typeahead .dropdown-item:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.typeahead .dropdown-item.active {
+  background-color: var(--bg-card-active);
+  border-left: 3px solid var(--accent-gold);
+}
+
+.typeahead .item-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.typeahead .item-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
    Opening Cards
    -------------------------------------------------------------------------- */
 
@@ -551,16 +610,44 @@ button:disabled {
    -------------------------------------------------------------------------- */
 
 .settings-panel {
-  padding: 1.25rem;
   border-top: 1px solid var(--border-color);
 }
 
-.settings-panel h3 {
-  margin-bottom: 0.75rem;
+.settings-panel.collapsed {
+  padding: 0;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.settings-header:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.settings-header h3 {
+  margin: 0;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+}
+
+.settings-header .toggle-icon {
+  font-size: 0.7rem;
+  color: var(--text-faint);
+}
+
+.settings-content {
+  padding: 0 1.25rem 1.25rem;
 }
 
 .settings-panel .field {
