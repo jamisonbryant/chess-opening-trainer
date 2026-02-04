@@ -104,7 +104,8 @@ function handleMove(move: { san: string }) {
   if (!expected) return
 
   if (move.san === expected) {
-    // Correct move
+    // Correct move — sync chess.js with board state
+    chess.value.move(move.san)
     training.advanceMove()
     training.addExchange({
       moveNumber: training.currentMoveIndex - 1,
@@ -123,7 +124,8 @@ function handleMove(move: { san: string }) {
 
     nextTick(() => playOpponentMovesIfNeeded())
   } else {
-    // Wrong move -- ask for explanation
+    // Wrong move — sync chess.js so we can undo later, then ask for explanation
+    chess.value.move(move.san)
     pendingUserMove.value = move.san
     training.setPhase('explaining')
     messages.value.push({

@@ -21,6 +21,13 @@ function submitExplanation() {
   emit('submit-explanation', userExplanation.value.trim())
   userExplanation.value = ''
 }
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    submitExplanation()
+  }
+}
 </script>
 
 <template>
@@ -43,7 +50,7 @@ function submitExplanation() {
       <textarea
         v-model="userExplanation"
         placeholder="Explain your reasoning..."
-        @keydown.ctrl.enter="submitExplanation"
+        @keydown="handleKeydown"
       />
       <button @click="submitExplanation" :disabled="!userExplanation.trim()">
         Submit
