@@ -2,21 +2,17 @@ const EQUAL_THRESHOLD = 30 // centipawns -- within this range, moves are "roughl
 
 export class StockfishService {
   private worker: Worker | null = null
-  private ready = false
   private messageQueue: Array<(line: string) => void> = []
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // stockfish npm package exposes a WASM worker
-        this.worker = new Worker(
-          new URL('../../node_modules/stockfish/src/stockfish-nnue-16-single.js', import.meta.url),
-          { type: 'classic' }
-        )
+        this.worker = new Worker(new URL('/stockfish.js', import.meta.url), {
+          type: 'classic',
+        })
         this.worker.onmessage = (e: MessageEvent) => {
           const line = typeof e.data === 'string' ? e.data : ''
           if (line === 'uciok') {
-            this.ready = true
             resolve()
           }
           for (const listener of this.messageQueue) {
@@ -41,7 +37,7 @@ export class StockfishService {
           if (match) {
             this.messageQueue = this.messageQueue.filter((l) => l !== listener)
             this.worker!.postMessage('stop')
-            resolve(parseInt(match[1], 10))
+            resolve(parseInt(match[1]!, 10))
           }
         }
         // Handle mate scores
@@ -50,7 +46,7 @@ export class StockfishService {
           if (match) {
             this.messageQueue = this.messageQueue.filter((l) => l !== listener)
             this.worker!.postMessage('stop')
-            const mateIn = parseInt(match[1], 10)
+            const mateIn = parseInt(match[1]!, 10)
             resolve(mateIn > 0 ? 10000 : -10000)
           }
         }
@@ -87,6 +83,5 @@ export class StockfishService {
   destroy(): void {
     this.worker?.terminate()
     this.worker = null
-    this.ready = false
   }
 }

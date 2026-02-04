@@ -1,7 +1,11 @@
 import { type AiProvider, SYSTEM_PROMPT } from './types'
 
 export class AnthropicProvider implements AiProvider {
-  constructor(private apiKey: string) {}
+  private apiKey: string
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
+  }
 
   async evaluate(userPrompt: string): Promise<string> {
     const response = await fetch('https://api.anthropic.com/v1/messages', {

@@ -1,10 +1,13 @@
 import { type AiProvider, SYSTEM_PROMPT } from './types'
 
 export class OllamaProvider implements AiProvider {
-  constructor(
-    private model: string = 'llama3.2',
-    private baseUrl: string = 'http://localhost:11434',
-  ) {}
+  private model: string
+  private baseUrl: string
+
+  constructor(model: string = 'llama3.2', baseUrl: string = 'http://localhost:11434') {
+    this.model = model
+    this.baseUrl = baseUrl
+  }
 
   async evaluate(userPrompt: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/api/chat`, {
