@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { marked } from 'marked'
 import { useTrainingStore } from '../stores/training'
+
+marked.setOptions({ breaks: true })
 
 const training = useTrainingStore()
 const userExplanation = ref('')
@@ -28,6 +31,10 @@ function handleKeydown(e: KeyboardEvent) {
     submitExplanation()
   }
 }
+
+function renderMarkdown(text: string): string {
+  return marked.parse(text) as string
+}
 </script>
 
 <template>
@@ -41,7 +48,7 @@ function handleKeydown(e: KeyboardEvent) {
         class="message"
         :class="msg.role"
       >
-        <div class="message-content">{{ msg.text }}</div>
+        <div class="message-content" v-html="renderMarkdown(msg.text)"></div>
       </div>
     </div>
 

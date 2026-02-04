@@ -66,6 +66,11 @@
   box-sizing: border-box;
 }
 
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -76,6 +81,8 @@ body {
   background-color: var(--bg-deep);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  overscroll-behavior: none;
 }
 
 #app {
@@ -122,6 +129,13 @@ a:hover {
 /* --------------------------------------------------------------------------
    Form Controls
    -------------------------------------------------------------------------- */
+
+select,
+input,
+textarea,
+button {
+  touch-action: manipulation;
+}
 
 select,
 input,
@@ -634,7 +648,12 @@ button:disabled {
   }
 
   .board-area {
-    padding: 0.5rem;
+    padding: 1rem;
+  }
+
+  .board-area .main-wrap {
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vw - 2rem);
   }
 
   .board-header h1 {
