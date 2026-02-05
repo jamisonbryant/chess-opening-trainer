@@ -9,7 +9,7 @@ const searchQuery = ref(training.currentOpening?.name ?? '')
 const showDropdown = ref(false)
 const selectedOpening = ref<Opening | null>(training.currentOpening ?? null)
 const selectedColor = ref<UserColor | null>(isTrainingActive.value ? training.userColor : null)
-const isCollapsed = ref(isTrainingActive.value)
+const isCollapsed = ref(false)
 const MAX_RESULTS = 50
 
 const filteredOpenings = computed(() => {

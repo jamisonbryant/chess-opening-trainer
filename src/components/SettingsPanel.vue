@@ -18,6 +18,22 @@ function toggleExpanded() {
 
     <div v-if="isExpanded" class="settings-menu">
       <div class="field">
+        <label>Theme</label>
+        <div class="theme-toggle">
+          <button
+            class="theme-btn"
+            :class="{ active: settings.theme === 'dark' }"
+            @click="settings.theme = 'dark'"
+          >Dark</button>
+          <button
+            class="theme-btn"
+            :class="{ active: settings.theme === 'light' }"
+            @click="settings.theme = 'light'"
+          >Light</button>
+        </div>
+      </div>
+
+      <div class="field">
         <label>AI Provider</label>
         <select v-model="settings.aiProvider">
           <option value="anthropic">Anthropic (Claude)</option>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, watch, watchEffect, onMounted, onUnmounted, nextTick } from 'vue'
 import { TheChessboard } from 'vue3-chessboard'
 import 'vue3-chessboard/style.css'
 import type { BoardApi, BoardConfig } from 'vue3-chessboard'
@@ -45,15 +45,6 @@ watch(messages, (msgs) => {
   }
 }, { deep: true })
 
-const displayFen = computed(() => {
-  const temp = new Chess()
-  const moves = playedMoves.value
-  const ply = viewingPly.value ?? moves.length
-  for (let i = 0; i < ply; i++) {
-    temp.move(moves[i]!)
-  }
-  return temp.fen()
-})
 
 function syncPlayedMoves() {
   playedMoves.value = [...chess.value.history()]
@@ -83,6 +74,7 @@ function goNext() {
   goToPly(viewingPly.value + 1)
 }
 function goToLive() { goToPly(null) }
+function flipBoard() { boardAPI.value?.toggleOrientation() }
 
 function isActivePly(moveIndex: number): boolean {
   const ply = moveIndex + 1
@@ -101,6 +93,14 @@ function dismissWelcome() {
   showWelcome.value = false
   localStorage.setItem('hideWelcome', 'true')
 }
+
+watchEffect(() => {
+  if (training.phase !== 'idle' && training.currentOpening) {
+    document.title = `Training: ${training.currentOpening.name} | Chess Opening Trainer`
+  } else {
+    document.title = 'Chess Opening Trainer'
+  }
+})
 
 function getAiProvider(): AiProvider {
   if (settings.aiProvider === 'anthropic') {
@@ -380,43 +380,44 @@ async function handleExplanation(explanation: string) {
       </aside>
 
       <main class="board-area">
-        <div class="board-and-chat">
-          <div class="board-column">
+        <div class="board-center">
+          <div class="board-and-chat">
             <TheChessboard
               v-if="training.phase !== 'idle'"
               :board-config="boardConfig"
               @board-created="(api) => (boardAPI = api)"
               @move="handleMove"
             />
-            <div v-if="training.phase !== 'idle'" class="board-controls">
-              <div class="move-list">
-                <template v-for="(move, i) in playedMoves" :key="i">
-                  <span v-if="i % 2 === 0" class="move-number">{{ Math.floor(i / 2) + 1 }}.</span>
-                  <span
-                    class="move"
-                    :class="{ active: isActivePly(i) }"
-                    @click="goToPly(i + 1)"
-                  >{{ move }}</span>
-                </template>
-                <span v-if="!playedMoves.length" class="no-moves">No moves yet</span>
-              </div>
-              <div class="board-nav">
-                <button @click="goToStart" :disabled="!playedMoves.length" title="Start position">⏮</button>
-                <button @click="goPrev" :disabled="!playedMoves.length || viewingPly === 0" title="Previous">◀</button>
-                <button @click="goNext" :disabled="viewingPly === null" title="Next">▶</button>
-                <button @click="goToLive" :disabled="viewingPly === null" title="Current position">⏭</button>
-              </div>
-              <div v-if="viewingPly !== null" class="viewing-history-badge">Viewing history</div>
-              <code class="fen-display">{{ displayFen }}</code>
+
+            <div v-if="training.phase !== 'idle'" class="chat-column">
+              <TrainingPanel
+                v-model:messages="messages"
+                @submit-explanation="handleExplanation"
+                @take-back="takeBack"
+              />
             </div>
           </div>
 
-          <div v-if="training.phase !== 'idle'" class="chat-column">
-            <TrainingPanel
-              v-model:messages="messages"
-              @submit-explanation="handleExplanation"
-              @take-back="takeBack"
-            />
+          <div v-if="training.phase !== 'idle'" class="board-controls">
+            <div class="move-list">
+              <template v-for="(move, i) in playedMoves" :key="i">
+                <span v-if="i % 2 === 0" class="move-number">{{ Math.floor(i / 2) + 1 }}.</span>
+                <span
+                  class="move"
+                  :class="{ active: isActivePly(i) }"
+                  @click="goToPly(i + 1)"
+                >{{ move }}</span>
+              </template>
+              <span v-if="!playedMoves.length" class="no-moves">No moves yet</span>
+            </div>
+            <div class="board-nav">
+              <span v-if="viewingPly !== null" class="viewing-history-badge">Viewing history</span>
+              <button @click="goToStart" :disabled="!playedMoves.length" title="Start position">⏮</button>
+              <button @click="goPrev" :disabled="!playedMoves.length || viewingPly === 0" title="Previous">◀</button>
+              <button @click="goNext" :disabled="viewingPly === null" title="Next">▶</button>
+              <button @click="goToLive" :disabled="viewingPly === null" title="Current position">⏭</button>
+              <button class="flip-btn" @click="flipBoard" title="Flip board">⇅</button>
+            </div>
           </div>
         </div>
       </main>

@@ -9,7 +9,7 @@
 :root {
   /* Background palette */
   --bg-deep: #0f0f1a;
-  --bg-primary: #1a1a2e;
+  --bg-primary: #1e1e36;
   --bg-secondary: #16213e;
   --bg-tertiary: #0f3460;
   --bg-card: #1e1e3f;
@@ -50,6 +50,9 @@
   /* Sizing */
   --sidebar-width: 280px;
   --panel-width: 360px;
+
+  /* Button text */
+  --btn-text: #0f0f1a;
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -184,7 +187,7 @@ button {
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.5;
-  color: var(--bg-deep);
+  color: var(--btn-text);
   background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
   border: none;
   border-radius: var(--border-radius-sm);
@@ -350,21 +353,20 @@ button:disabled {
   justify-content: center;
   padding: 2rem;
   background-color: var(--bg-deep);
-  overflow: hidden;
+  overflow: auto;
+}
+
+.board-center {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .board-and-chat {
   display: flex;
   align-items: stretch;
-  height: 80vh;
-}
-
-.board-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  /* 100vh minus nav (~61px), board-area padding (2x2rem), and controls (~112px) */
+  height: calc(100vh - 15rem);
 }
 
 .chat-column {
@@ -966,12 +968,14 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
-   Board Controls (Move History, Nav, FEN)
+   Board Controls (Move History + Nav)
    -------------------------------------------------------------------------- */
 
 .board-controls {
-  margin-top: 1rem;
-  max-width: min(70vh, 560px);
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
   width: 100%;
 }
 
@@ -980,12 +984,14 @@ button:disabled {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.2rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.4rem 0.75rem;
   background-color: var(--bg-primary);
   border-radius: var(--border-radius);
   font-size: 0.85rem;
-  max-height: 72px;
-  min-height: 36px;
+  max-height: 48px;
+  min-height: 32px;
+  flex: 1;
+  min-width: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
@@ -1027,16 +1033,15 @@ button:disabled {
 
 .board-nav {
   display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 0.25rem;
-  margin-top: 0.5rem;
+  flex-shrink: 0;
 }
 
 .board-nav button {
-  width: 40px;
-  height: 32px;
+  width: 32px;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
@@ -1047,39 +1052,109 @@ button:disabled {
   transform: none;
 }
 
-.viewing-history-badge {
-  margin-top: 0.4rem;
-  text-align: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent-amber);
+.flip-btn {
+  margin-left: 0.25rem;
+  border-left: 1px solid var(--border-color);
 }
 
-.fen-display {
-  display: block;
-  margin-top: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  font-family: var(--font-mono);
+.viewing-history-badge {
   font-size: 0.65rem;
-  color: var(--text-faint);
-  background-color: var(--bg-primary);
-  border-radius: var(--border-radius-sm);
-  overflow-x: auto;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-amber);
   white-space: nowrap;
-  user-select: all;
-  cursor: text;
+}
+
+/* --------------------------------------------------------------------------
+   Light Theme
+   -------------------------------------------------------------------------- */
+
+[data-theme="light"] {
+  /* Background palette */
+  --bg-deep: #f0f0f4;
+  --bg-primary: #e8e8ee;
+  --bg-secondary: #dcdce4;
+  --bg-tertiary: #c8c8d8;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f5f5fa;
+  --bg-card-active: #eeeef5;
+  --bg-input: #ffffff;
+
+  /* Accent palette -- keep similar, slight adjustments for contrast */
+  --accent-red: #d63851;
+  --accent-gold: #b8942e;
+  --accent-amber: #c98a20;
+  --accent-gold-dim: #a08030;
+
+  /* Text palette */
+  --text-primary: #1a1a2e;
+  --text-secondary: #3a3a52;
+  --text-muted: #6a6a80;
+  --text-faint: #8a8aa0;
+
+  /* Message role colors */
+  --msg-trainer-bg: #e0eaf8;
+  --msg-trainer-border: #6a9fd8;
+  --msg-user-bg: #ddf0e4;
+  --msg-user-border: #5aaa6e;
+  --msg-system-bg: #eeeef2;
+  --msg-system-border: #c0c0d0;
+
+  /* Borders & misc */
+  --border-color: #d0d0dc;
+
+  /* Button text -- stays dark on gold */
+  --btn-text: #0f0f1a;
+}
+
+/* --------------------------------------------------------------------------
+   Chessboard Theme Override (dark board for light UI)
+   -------------------------------------------------------------------------- */
+
+[data-theme="light"] cg-board {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%234a7039'/%3E%3Crect width='100' height='100' fill='%236d945b'/%3E%3Crect x='100' y='100' width='100' height='100' fill='%236d945b'/%3E%3C/svg%3E");
+  background-size: 25%;
+}
+
+/* --------------------------------------------------------------------------
+   Theme Toggle
+   -------------------------------------------------------------------------- */
+
+.theme-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.theme-btn {
+  flex: 1;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.theme-btn:hover {
+  background: var(--bg-card-hover);
+  opacity: 1;
+  transform: none;
+}
+
+.theme-btn.active {
+  background: var(--bg-card-active);
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
 }
 
 /* --------------------------------------------------------------------------
    Chessboard Overrides
    -------------------------------------------------------------------------- */
 
-/* Size the board to 80% of viewport height */
-.board-area .main-wrap {
-  width: 80vh;
-  height: 80vh;
+/* Board is square, sized to match the container height */
+.board-and-chat .main-wrap {
+  width: calc(100vh - 15rem);
+  height: calc(100vh - 15rem);
 }
 
 /* --------------------------------------------------------------------------
@@ -1108,6 +1183,7 @@ button:disabled {
 
   .board-and-chat {
     flex-direction: column;
+    height: auto;
   }
 
   .chat-column {
@@ -1139,7 +1215,7 @@ button:disabled {
     height: auto;
   }
 
-  .board-area .main-wrap {
+  .board-and-chat .main-wrap {
     width: calc(100vw - 2rem);
     height: calc(100vw - 2rem);
   }
