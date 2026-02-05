@@ -1,17 +1,46 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { ChevronDown, ChevronRight, RotateCcw } from 'lucide-vue-next'
-import { openings, type Opening } from '../data/openings'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ChevronDown, ChevronRight, RotateCcw, X } from 'lucide-vue-next'
+import { openings, getOpening, type Opening } from '../data/openings'
 import { useTrainingStore, type UserColor } from '../stores/training'
+import { useMyOpeningsStore } from '../stores/my-openings'
 
 const training = useTrainingStore()
+const myOpenings = useMyOpeningsStore()
 const isTrainingActive = computed(() => training.phase !== 'idle')
 const searchQuery = ref(training.currentOpening?.name ?? '')
 const showDropdown = ref(false)
 const selectedOpening = ref<Opening | null>(training.currentOpening ?? null)
 const selectedColor = ref<UserColor | null>(isTrainingActive.value ? training.userColor : null)
 const isCollapsed = ref(false)
+const isMobile = ref(false)
 const MAX_RESULTS = 50
+
+function updateMobile(e: MediaQueryListEvent | MediaQueryList) {
+  isMobile.value = e.matches
+}
+
+let mql: MediaQueryList | null = null
+
+onMounted(() => {
+  mql = window.matchMedia('(max-width: 1024px)')
+  isMobile.value = mql.matches
+  mql.addEventListener('change', updateMobile)
+})
+
+onUnmounted(() => {
+  mql?.removeEventListener('change', updateMobile)
+})
+
+// Auto-collapse when training starts on mobile
+watch(
+  () => training.phase,
+  (newPhase, oldPhase) => {
+    if (newPhase === 'playing' && oldPhase === 'idle' && isMobile.value) {
+      isCollapsed.value = true
+    }
+  }
+)
 
 const filteredOpenings = computed(() => {
   if (!searchQuery.value.trim()) return []
@@ -60,12 +89,31 @@ function resetSelection() {
   searchQuery.value = ''
   isCollapsed.value = false
 }
+
+function startFromMyOpening(openingId: string, userColor: UserColor) {
+  const opening = getOpening(openingId)
+  if (!opening) return
+  selectedOpening.value = opening
+  selectedColor.value = userColor
+  searchQuery.value = opening.name
+  training.startSession(opening.id, userColor)
+}
+
+function removeFromMyOpenings(openingId: string, userColor: UserColor) {
+  myOpenings.remove(openingId, userColor)
+}
 </script>
 
 <template>
   <div class="opening-selector" :class="{ collapsed: isCollapsed && isTrainingActive }">
-    <button v-if="isTrainingActive" class="selector-header" @click="toggleCollapsed">
-      <h2>Opening</h2>
+    <button v-if="isTrainingActive" class="selector-header" :class="{ 'selector-header--compact': isCollapsed && isMobile }" @click="toggleCollapsed">
+      <template v-if="isCollapsed && isMobile">
+        <span class="compact-info">
+          <span class="compact-name">{{ training.currentOpening?.name }}</span>
+          <span class="compact-progress">{{ training.currentMoveIndex }}/{{ training.currentOpening?.mainLine.length }}</span>
+        </span>
+      </template>
+      <h2 v-else>Opening</h2>
       <component :is="isCollapsed ? ChevronRight : ChevronDown" :size="14" :stroke-width="2.5" class="toggle-icon" />
     </button>
     <h2 v-else>Select Opening</h2>
@@ -149,9 +197,35 @@ function resetSelection() {
       </div>
     </div>
 
-    <div class="my-openings-section">
+    <div v-if="!(isMobile && isTrainingActive)" class="my-openings-section">
       <h2>My Openings</h2>
-      <span class="coming-soon-badge">Coming Soon</span>
+      <div v-if="myOpenings.sortedOpenings.length === 0" class="my-openings-empty">
+        Complete an opening to save it here.
+      </div>
+      <div v-else class="my-openings-list">
+        <div
+          v-for="entry in myOpenings.sortedOpenings"
+          :key="`${entry.openingId}-${entry.userColor}`"
+          class="opening-card my-opening-card"
+          :class="{ active: isTrainingActive && training.openingId === entry.openingId && training.userColor === entry.userColor }"
+          @click="startFromMyOpening(entry.openingId, entry.userColor)"
+        >
+          <div class="my-opening-header">
+            <h3>{{ getOpening(entry.openingId)?.name ?? entry.openingId }}</h3>
+            <button
+              class="my-opening-remove"
+              title="Remove from My Openings"
+              @click.stop="removeFromMyOpenings(entry.openingId, entry.userColor)"
+            >
+              <X :size="14" />
+            </button>
+          </div>
+          <div class="my-opening-meta">
+            <span class="color-badge">{{ entry.userColor }}</span>
+            <span class="training-count">{{ entry.timesCompleted }}x completed</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

@@ -10,7 +10,7 @@ import { StockfishService } from '../services/stockfish'
 import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
 import { buildEvaluationPrompt, buildReflectionPrompt, REFLECTION_SYSTEM_PROMPT, type AiProvider } from '../services/ai'
-import { X, SkipBack, ChevronLeft, ChevronRight, SkipForward, ArrowUpDown } from 'lucide-vue-next'
+import { X, SkipBack, ChevronLeft, ChevronRight, SkipForward, ArrowUpDown, MessageCircle } from 'lucide-vue-next'
 import logoUrl from '../assets/logo.svg'
 import OpeningSelector from './OpeningSelector.vue'
 import SettingsPanel from './SettingsPanel.vue'
@@ -27,6 +27,26 @@ const messages = ref<Array<{ role: 'trainer' | 'user' | 'system'; text: string }
 const pendingUserMove = ref<string | null>(null)
 const playedMoves = ref<string[]>([])
 const viewingPly = ref<number | null>(null)
+
+// Mobile viewport detection
+const isMobilePortrait = ref(false)
+const isMobileLandscape = ref(false)
+const isChatOpen = ref(false)
+const unreadCount = ref(0)
+
+function updateViewport() {
+  const portrait = window.matchMedia('(max-width: 1024px) and (orientation: portrait)')
+  const landscape = window.matchMedia('(max-width: 1024px) and (max-height: 500px) and (orientation: landscape)')
+  isMobilePortrait.value = portrait.matches
+  isMobileLandscape.value = landscape.matches
+}
+
+function toggleChat() {
+  isChatOpen.value = !isChatOpen.value
+  if (isChatOpen.value) {
+    unreadCount.value = 0
+  }
+}
 
 
 function syncPlayedMoves() {
@@ -95,6 +115,10 @@ function getAiProvider(): AiProvider {
 }
 
 onMounted(async () => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
+  window.addEventListener('orientationchange', updateViewport)
+
   stockfish.value = new StockfishService()
   try {
     await stockfish.value.init()
@@ -137,7 +161,30 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stockfish.value?.destroy()
+  window.removeEventListener('resize', updateViewport)
+  window.removeEventListener('orientationchange', updateViewport)
 })
+
+// Auto-open chat overlay when user input is needed on mobile portrait
+watch(
+  () => training.phase,
+  (phase) => {
+    if (isMobilePortrait.value && ['explaining', 'reflecting'].includes(phase)) {
+      isChatOpen.value = true
+      unreadCount.value = 0
+    }
+  }
+)
+
+// Track unread messages when chat overlay is closed on mobile
+watch(
+  () => messages.value.length,
+  () => {
+    if (isMobilePortrait.value && !isChatOpen.value && training.phase !== 'idle') {
+      unreadCount.value++
+    }
+  }
+)
 
 // Watch for session start -- reset board and play opening moves
 watch(
@@ -389,7 +436,7 @@ async function handleReflection(userMessage: string) {
     </header>
 
     <div class="chess-trainer">
-      <aside class="sidebar-left">
+      <aside class="sidebar-left" :class="{ 'landscape-hidden': isMobileLandscape && training.phase !== 'idle' }">
         <div v-if="showWelcome && training.phase === 'idle'" class="welcome-banner">
           <button class="dismiss-btn" @click="dismissWelcome" title="Dismiss"><X :size="16" /></button>
           <h3>How to Train</h3>
@@ -418,7 +465,8 @@ async function handleReflection(userMessage: string) {
               </div>
             </div>
 
-            <div v-if="training.phase !== 'idle'" class="chat-column">
+            <!-- Desktop / landscape inline chat -->
+            <div v-if="training.phase !== 'idle' && !isMobilePortrait" class="chat-column">
               <TrainingPanel
                 v-model:messages="messages"
                 @submit-explanation="handleExplanation"
@@ -451,6 +499,28 @@ async function handleReflection(userMessage: string) {
           </div>
         </div>
       </main>
+
+    </div>
+
+    <!-- Mobile portrait chat overlay -->
+    <div
+      v-if="isMobilePortrait && training.phase !== 'idle'"
+      class="chat-overlay"
+      :class="{ open: isChatOpen }"
+    >
+      <button class="chat-overlay-handle" @click="toggleChat">
+        <MessageCircle :size="16" />
+        <span>Trainer Chat</span>
+        <span v-if="unreadCount > 0 && !isChatOpen" class="unread-badge">{{ unreadCount }}</span>
+      </button>
+      <div class="chat-overlay-body">
+        <TrainingPanel
+          v-model:messages="messages"
+          @submit-explanation="handleExplanation"
+          @submit-reflection="handleReflection"
+          @take-back="takeBack"
+        />
+      </div>
     </div>
   </div>
 </template>

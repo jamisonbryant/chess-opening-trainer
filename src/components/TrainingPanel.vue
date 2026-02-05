@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
-import { Undo2 } from 'lucide-vue-next'
+import { ref, computed, watch, nextTick } from 'vue'
+import { Undo2, Star } from 'lucide-vue-next'
 import { marked } from 'marked'
 import { useTrainingStore } from '../stores/training'
+import { useMyOpeningsStore } from '../stores/my-openings'
 
 marked.setOptions({ breaks: true })
 
 const training = useTrainingStore()
+const myOpenings = useMyOpeningsStore()
 const userExplanation = ref('')
 
 interface Message {
@@ -54,6 +56,15 @@ function handleKeydown(e: KeyboardEvent) {
       submitExplanation()
     }
   }
+}
+
+const isInMyOpenings = computed(() =>
+  training.openingId ? myOpenings.has(training.openingId, training.userColor) : false
+)
+
+function addToMyOpenings() {
+  if (!training.openingId) return
+  myOpenings.addOrIncrement(training.openingId, training.userColor)
 }
 
 function renderMarkdown(text: string): string {
@@ -117,6 +128,14 @@ function renderMarkdown(text: string): string {
     <div v-if="training.phase === 'complete'" class="complete">
       <h3>Opening complete!</h3>
       <p>You've finished the {{ training.currentOpening?.name }} main line.</p>
+      <button
+        class="add-favorite-btn"
+        :class="{ added: isInMyOpenings }"
+        @click="addToMyOpenings"
+      >
+        <Star :size="16" :fill="isInMyOpenings ? 'currentColor' : 'none'" />
+        {{ isInMyOpenings ? 'Saved to My Openings' : 'Add to My Openings' }}
+      </button>
       <button @click="training.startSession(training.openingId!, training.userColor)">
         Try again
       </button>
