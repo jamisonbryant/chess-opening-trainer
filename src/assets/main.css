@@ -351,12 +351,16 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1rem 2rem;
   background-color: var(--bg-deep);
-  overflow: auto;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .board-center {
+  --board-max-h: calc(100vh - 9.5rem);
+  --board-max-w: calc(100vw - var(--sidebar-width) - var(--panel-width) - 6rem);
+  --board-size: min(var(--board-max-h), var(--board-max-w));
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -365,8 +369,7 @@ button:disabled {
 .board-and-chat {
   display: flex;
   align-items: stretch;
-  /* 100vh minus nav (~61px), board-area padding (2x2rem), and controls (~112px) */
-  height: calc(100vh - 15rem);
+  height: var(--board-size);
 }
 
 .chat-column {
@@ -1199,10 +1202,10 @@ button:disabled {
    Chessboard Overrides
    -------------------------------------------------------------------------- */
 
-/* Board is square, sized to match the container height */
+/* Board is square, sized to fit available space */
 .board-and-chat .main-wrap {
-  width: calc(100vh - 15rem);
-  height: calc(100vh - 15rem);
+  width: var(--board-size);
+  height: var(--board-size);
 }
 
 /* --------------------------------------------------------------------------
@@ -1227,6 +1230,10 @@ button:disabled {
 
   .board-area {
     padding: 1rem;
+  }
+
+  .board-center {
+    --board-max-w: calc(100vw - 4rem);
   }
 
   .board-and-chat {
@@ -1259,13 +1266,17 @@ button:disabled {
     padding: 1rem;
   }
 
+  .board-center {
+    --board-max-w: calc(100vw - 2rem);
+  }
+
   .board-and-chat {
     height: auto;
   }
 
   .board-and-chat .main-wrap {
-    width: calc(100vw - 2rem);
-    height: calc(100vw - 2rem);
+    width: var(--board-size);
+    height: var(--board-size);
   }
 
   .board-header h1 {
