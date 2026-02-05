@@ -2,8 +2,7 @@
 
 Practice chess openings and get AI-powered coaching when you go wrong.
 
-<!-- TODO: Replace with actual screenshot or demo GIF -->
-![Demo screenshot](docs/demo.png)
+![Demo](docs/demo.gif)
 
 ## What It Does
 
