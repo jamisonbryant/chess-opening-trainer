@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
+import { Undo2 } from 'lucide-vue-next'
 import { marked } from 'marked'
 import { useTrainingStore } from '../stores/training'
 
@@ -84,7 +85,7 @@ function renderMarkdown(text: string): string {
       />
       <div class="input-actions">
         <button class="take-back-btn" @click="emit('take-back')">
-          &#8630; Take Back
+          <Undo2 :size="16" /> Take Back
         </button>
         <button @click="submitExplanation" :disabled="!userExplanation.trim()">
           Submit

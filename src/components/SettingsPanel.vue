@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { Settings } from 'lucide-vue-next'
 import { useSettingsStore } from '../stores/settings'
 import { ANTHROPIC_MODELS, fetchOllamaModels, type OllamaModel } from '../services/ai'
 
@@ -56,7 +57,7 @@ watch(isExpanded, (expanded) => {
 <template>
   <div class="settings-dropdown" :class="{ open: isExpanded }" ref="dropdownRef">
     <button class="settings-toggle" @click="toggleExpanded" title="Settings">
-      <span class="gear-icon">⚙</span>
+      <Settings :size="18" class="gear-icon" />
     </button>
 
     <div v-if="isExpanded" class="settings-menu">

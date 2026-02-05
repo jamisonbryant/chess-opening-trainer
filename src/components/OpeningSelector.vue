@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { ChevronDown, ChevronRight, RotateCcw } from 'lucide-vue-next'
 import { openings, type Opening } from '../data/openings'
 import { useTrainingStore, type UserColor } from '../stores/training'
 
@@ -65,7 +66,7 @@ function resetSelection() {
   <div class="opening-selector" :class="{ collapsed: isCollapsed && isTrainingActive }">
     <button v-if="isTrainingActive" class="selector-header" @click="toggleCollapsed">
       <h2>Opening</h2>
-      <span class="toggle-icon">{{ isCollapsed ? '▶' : '▼' }}</span>
+      <component :is="isCollapsed ? ChevronRight : ChevronDown" :size="14" :stroke-width="2.5" class="toggle-icon" />
     </button>
     <h2 v-else>Select Opening</h2>
 
@@ -144,8 +145,13 @@ function resetSelection() {
           />
         </div>
         <p>Move {{ training.currentMoveIndex }} / {{ training.currentOpening?.mainLine.length }}</p>
-        <button class="reset-btn" @click="resetSelection">&#8635; Start Over</button>
+        <button class="reset-btn" @click="resetSelection"><RotateCcw :size="16" /> Start Over</button>
       </div>
+    </div>
+
+    <div class="my-openings-section">
+      <h2>My Openings</h2>
+      <span class="coming-soon-badge">Coming Soon</span>
     </div>
   </div>
 </template>

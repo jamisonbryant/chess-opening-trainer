@@ -10,6 +10,7 @@ import { StockfishService } from '../services/stockfish'
 import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
 import { buildEvaluationPrompt, buildReflectionPrompt, REFLECTION_SYSTEM_PROMPT, type AiProvider } from '../services/ai'
+import { X, SkipBack, ChevronLeft, ChevronRight, SkipForward, ArrowUpDown } from 'lucide-vue-next'
 import logoUrl from '../assets/logo.svg'
 import OpeningSelector from './OpeningSelector.vue'
 import SettingsPanel from './SettingsPanel.vue'
@@ -390,7 +391,7 @@ async function handleReflection(userMessage: string) {
     <div class="chess-trainer">
       <aside class="sidebar-left">
         <div v-if="showWelcome && training.phase === 'idle'" class="welcome-banner">
-          <button class="dismiss-btn" @click="dismissWelcome" title="Dismiss">×</button>
+          <button class="dismiss-btn" @click="dismissWelcome" title="Dismiss"><X :size="16" /></button>
           <h3>How to Train</h3>
           <ol>
             <li>Search for an opening below</li>
@@ -441,11 +442,11 @@ async function handleReflection(userMessage: string) {
             </div>
             <div class="board-nav">
               <span v-if="viewingPly !== null" class="viewing-history-badge">Viewing history</span>
-              <button @click="goToStart" :disabled="!playedMoves.length" title="Start position">⏮</button>
-              <button @click="goPrev" :disabled="!playedMoves.length || viewingPly === 0" title="Previous">◀</button>
-              <button @click="goNext" :disabled="viewingPly === null" title="Next">▶</button>
-              <button @click="goToLive" :disabled="viewingPly === null" title="Current position">⏭</button>
-              <button class="flip-btn" @click="flipBoard" title="Flip board">⇅</button>
+              <button @click="goToStart" :disabled="!playedMoves.length" title="Start position"><SkipBack :size="18" /></button>
+              <button @click="goPrev" :disabled="!playedMoves.length || viewingPly === 0" title="Previous"><ChevronLeft :size="18" /></button>
+              <button @click="goNext" :disabled="viewingPly === null" title="Next"><ChevronRight :size="18" /></button>
+              <button @click="goToLive" :disabled="viewingPly === null" title="Current position"><SkipForward :size="18" /></button>
+              <button class="flip-btn" @click="flipBoard" title="Flip board"><ArrowUpDown :size="18" /></button>
             </div>
           </div>
         </div>
