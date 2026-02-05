@@ -18,8 +18,11 @@ export type TrainingPhase =
   | 'evaluating'  // AI is generating response
   | 'complete'    // reached end of main line
 
+export type UserColor = 'white' | 'black'
+
 export const useTrainingStore = defineStore('training', () => {
   const openingId = ref<string | null>(null)
+  const userColor = ref<UserColor>('white')
   const currentMoveIndex = ref(0)
   const history = ref<TrainingExchange[]>([])
   const phase = ref<TrainingPhase>('idle')
@@ -29,10 +32,9 @@ export const useTrainingStore = defineStore('training', () => {
   )
 
   const isUserTurn = computed(() => {
-    const opening = currentOpening.value
-    if (!opening) return false
+    if (!currentOpening.value) return false
     const moveIsWhite = currentMoveIndex.value % 2 === 0
-    return opening.userColor === 'white' ? moveIsWhite : !moveIsWhite
+    return userColor.value === 'white' ? moveIsWhite : !moveIsWhite
   })
 
   const expectedMove = computed(() =>
@@ -51,8 +53,9 @@ export const useTrainingStore = defineStore('training', () => {
     return currentMoveIndex.value / opening.mainLine.length
   })
 
-  function startSession(id: string) {
+  function startSession(id: string, color: UserColor) {
     openingId.value = id
+    userColor.value = color
     currentMoveIndex.value = 0
     history.value = []
     phase.value = 'playing'
@@ -75,6 +78,7 @@ export const useTrainingStore = defineStore('training', () => {
 
   function reset() {
     openingId.value = null
+    userColor.value = 'white'
     currentMoveIndex.value = 0
     history.value = []
     phase.value = 'idle'
@@ -82,6 +86,7 @@ export const useTrainingStore = defineStore('training', () => {
 
   return {
     openingId,
+    userColor,
     currentMoveIndex,
     history,
     phase,

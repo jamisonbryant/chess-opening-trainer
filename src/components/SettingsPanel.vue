@@ -11,13 +11,12 @@ function toggleExpanded() {
 </script>
 
 <template>
-  <div class="settings-panel" :class="{ collapsed: !isExpanded }">
-    <button class="settings-header" @click="toggleExpanded">
-      <h3>Settings</h3>
-      <span class="toggle-icon">{{ isExpanded ? '▼' : '▶' }}</span>
+  <div class="settings-dropdown" :class="{ open: isExpanded }">
+    <button class="settings-toggle" @click="toggleExpanded" title="Settings">
+      <span class="gear-icon">⚙</span>
     </button>
 
-    <div v-if="isExpanded" class="settings-content">
+    <div v-if="isExpanded" class="settings-menu">
       <div class="field">
         <label>AI Provider</label>
         <select v-model="settings.aiProvider">

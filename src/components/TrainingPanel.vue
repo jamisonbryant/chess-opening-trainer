@@ -71,7 +71,7 @@ function renderMarkdown(text: string): string {
     <div v-if="training.phase === 'complete'" class="complete">
       <h3>Opening complete!</h3>
       <p>You've finished the {{ training.currentOpening?.name }} main line.</p>
-      <button @click="training.startSession(training.openingId!)">
+      <button @click="training.startSession(training.openingId!, training.userColor)">
         Try again
       </button>
     </div>

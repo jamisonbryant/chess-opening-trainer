@@ -28,6 +28,13 @@ const boardConfig = ref<BoardConfig>({
   animation: { enabled: true, duration: 300 },
 })
 
+const showWelcome = ref(localStorage.getItem('hideWelcome') !== 'true')
+
+function dismissWelcome() {
+  showWelcome.value = false
+  localStorage.setItem('hideWelcome', 'true')
+}
+
 function getAiProvider(): AiProvider {
   if (settings.aiProvider === 'anthropic') {
     return new AnthropicProvider(settings.anthropicApiKey)
@@ -53,24 +60,32 @@ onUnmounted(() => {
 
 // Watch for session start -- reset board and play opening moves
 watch(
-  () => training.openingId,
-  () => {
-    if (!training.openingId) return
-    chess.value = new Chess()
-    messages.value = []
-    boardAPI.value?.resetBoard()
+  () => training.phase,
+  (newPhase, oldPhase) => {
+    if (newPhase === 'playing' && oldPhase === 'idle') {
+      // Session just started
+      chess.value = new Chess()
+      messages.value = []
+      boardAPI.value?.resetBoard()
 
-    const opening = training.currentOpening!
-    if (opening.userColor === 'black') {
-      boardAPI.value?.toggleOrientation()
+      // Set board orientation based on user's chosen color
+      if (training.userColor === 'black') {
+        boardAPI.value?.toggleOrientation()
+      }
+
+      const opening = training.currentOpening!
+      messages.value.push({
+        role: 'trainer',
+        text: `Let's study the ${opening.name}. You're playing as ${training.userColor}. Make your moves on the board.`,
+      })
+
+      nextTick(() => playOpponentMovesIfNeeded())
+    } else if (newPhase === 'idle') {
+      // Session ended, reset board
+      chess.value = new Chess()
+      messages.value = []
+      boardAPI.value?.resetBoard()
     }
-
-    messages.value.push({
-      role: 'trainer',
-      text: `Let's study the ${opening.name}. You're playing as ${opening.userColor}. Make your moves on the board.`,
-    })
-
-    nextTick(() => playOpponentMovesIfNeeded())
   }
 )
 
@@ -212,33 +227,47 @@ async function handleExplanation(explanation: string) {
 </script>
 
 <template>
-  <div class="chess-trainer">
-    <aside class="sidebar-left">
-      <OpeningSelector />
-      <SettingsPanel />
-    </aside>
-
-    <main class="board-area">
-      <div v-if="training.currentOpening" class="board-header">
-        <h1>{{ training.currentOpening.name }}</h1>
-        <span>Move {{ Math.floor(training.currentMoveIndex / 2) + 1 }}</span>
+  <div class="app-layout">
+    <header class="top-nav">
+      <div class="nav-left">
+        <h1 v-if="training.currentOpening">{{ training.currentOpening.name }}</h1>
+        <h1 v-else>Chess Opening Trainer</h1>
+        <span v-if="training.currentOpening" class="move-indicator">Move {{ Math.floor(training.currentMoveIndex / 2) + 1 }}</span>
       </div>
-      <div v-else class="board-header">
-        <h1>Chess Opening Trainer</h1>
-        <span>Select an opening to begin</span>
-      </div>
-      <TheChessboard
-        :board-config="boardConfig"
-        @board-created="(api) => (boardAPI = api)"
-        @move="handleMove"
-      />
-    </main>
+      <SettingsPanel class="nav-settings" />
+    </header>
 
-    <aside class="sidebar-right">
+    <div class="chess-trainer">
+      <aside class="sidebar-left">
+        <div v-if="showWelcome && training.phase === 'idle'" class="welcome-banner">
+          <button class="dismiss-btn" @click="dismissWelcome" title="Dismiss">×</button>
+          <h3>How to Train</h3>
+          <ol>
+            <li>Search for an opening below</li>
+            <li>Choose White or Black</li>
+            <li>Click <strong>Start Training</strong></li>
+            <li>Play moves on the board</li>
+            <li>Explain deviations to the AI coach</li>
+          </ol>
+        </div>
+        <OpeningSelector />
+      </aside>
+
+      <main class="board-area">
+        <TheChessboard
+          v-if="training.phase !== 'idle'"
+          :board-config="boardConfig"
+          @board-created="(api) => (boardAPI = api)"
+          @move="handleMove"
+        />
+      </main>
+
+    <aside v-if="training.phase !== 'idle'" class="sidebar-right">
       <TrainingPanel
         v-model:messages="messages"
         @submit-explanation="handleExplanation"
       />
     </aside>
+    </div>
   </div>
 </template>

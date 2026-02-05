@@ -208,14 +208,131 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
-   Main Layout - Chess Trainer Grid
+   Main Layout
+   -------------------------------------------------------------------------- */
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   Top Nav
+   -------------------------------------------------------------------------- */
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top-nav h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.top-nav .move-indicator {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Settings Dropdown (Top Nav)
+   -------------------------------------------------------------------------- */
+
+.settings-dropdown {
+  position: relative;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.settings-toggle:hover {
+  background: var(--bg-card-hover);
+  transform: none;
+}
+
+.settings-dropdown.open .settings-toggle {
+  background: var(--bg-card-active);
+  border-color: var(--accent-gold);
+}
+
+.gear-icon {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.settings-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 280px;
+  padding: 1rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.settings-menu .field {
+  margin-bottom: 0.75rem;
+}
+
+.settings-menu .field:last-child {
+  margin-bottom: 0;
+}
+
+.settings-menu .field label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   Chess Trainer Grid
    -------------------------------------------------------------------------- */
 
 .chess-trainer {
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr var(--panel-width);
+  grid-template-columns: var(--sidebar-width) 1fr;
   gap: 0;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
+}
+
+.chess-trainer:has(.sidebar-right) {
+  grid-template-columns: var(--sidebar-width) 1fr var(--panel-width);
 }
 
 /* --------------------------------------------------------------------------
@@ -223,13 +340,13 @@ button:disabled {
    -------------------------------------------------------------------------- */
 
 .sidebar-left {
+  position: relative;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 1px;
   background-color: var(--bg-primary);
   border-right: 1px solid var(--border-color);
-  overflow-y: auto;
-  max-height: 100vh;
+  overflow: visible;
 }
 
 /* --------------------------------------------------------------------------
@@ -237,28 +354,68 @@ button:disabled {
    -------------------------------------------------------------------------- */
 
 .board-area {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   background-color: var(--bg-deep);
-  min-height: 100vh;
 }
 
-.board-header {
-  text-align: center;
-  margin-bottom: 1.25rem;
+/* --------------------------------------------------------------------------
+   Welcome Banner
+   -------------------------------------------------------------------------- */
+
+.welcome-banner {
+  position: relative;
+  padding: 1rem 1.25rem;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.board-header h1 {
-  margin-bottom: 0.15em;
+.welcome-banner h3 {
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--accent-gold);
 }
 
-.board-header span {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  letter-spacing: 0.03em;
+.welcome-banner ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.welcome-banner li {
+  margin-bottom: 0.35rem;
+  line-height: 1.4;
+}
+
+.welcome-banner li strong {
+  color: var(--accent-gold);
+}
+
+.dismiss-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-faint);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.dismiss-btn:hover {
+  color: var(--text-secondary);
+  background: transparent;
+  transform: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -270,7 +427,7 @@ button:disabled {
   flex-direction: column;
   background-color: var(--bg-primary);
   border-left: 1px solid var(--border-color);
-  max-height: 100vh;
+  overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -278,11 +435,45 @@ button:disabled {
    -------------------------------------------------------------------------- */
 
 .opening-selector {
+  position: relative;
+  z-index: 100;
   padding: 1.25rem;
+  overflow: visible;
 }
 
 .opening-selector h2 {
   margin-bottom: 1rem;
+}
+
+.opening-selector.collapsed {
+  padding-bottom: 0;
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.selector-header:hover {
+  opacity: 0.8;
+  transform: none;
+}
+
+.selector-header h2 {
+  margin: 0;
+}
+
+.selector-header .toggle-icon {
+  font-size: 0.7rem;
+  color: var(--text-faint);
 }
 
 /* --------------------------------------------------------------------------
@@ -291,6 +482,7 @@ button:disabled {
 
 .typeahead {
   position: relative;
+  overflow: visible;
 }
 
 .typeahead input {
@@ -308,7 +500,7 @@ button:disabled {
   border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 var(--border-radius) var(--border-radius);
-  z-index: 100;
+  z-index: 1000;
 }
 
 .typeahead .dropdown-item {
@@ -404,6 +596,72 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
+   Color Selector
+   -------------------------------------------------------------------------- */
+
+.color-selector {
+  margin-top: 1rem;
+}
+
+.color-selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.color-buttons {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.color-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.color-btn .icon {
+  font-size: 1em;
+  line-height: 1;
+}
+
+.color-btn:hover {
+  background: var(--bg-card-hover);
+  opacity: 1;
+  transform: none;
+}
+
+.color-btn.active {
+  background: var(--bg-card-active);
+  border-color: var(--accent-gold);
+}
+
+.color-btn.white.active {
+  color: #fff;
+}
+
+.color-btn.black.active {
+  color: #333;
+}
+
+.start-btn {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* --------------------------------------------------------------------------
    Progress Section
    -------------------------------------------------------------------------- */
 
@@ -425,6 +683,19 @@ button:disabled {
   margin-top: 0.4rem;
   font-size: 0.8rem;
   color: var(--text-faint);
+}
+
+.reset-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.reset-btn:hover {
+  background: var(--bg-card-hover);
+  transform: none;
 }
 
 .progress-bar {
@@ -449,9 +720,10 @@ button:disabled {
 .training-panel {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;
   padding: 1.25rem;
   overflow: hidden;
+  min-height: 0;
 }
 
 .training-panel h2 {
@@ -686,33 +958,25 @@ button:disabled {
   }
 
   .sidebar-left {
-    max-height: none;
+    z-index: 10;
     border-right: none;
     border-bottom: 1px solid var(--border-color);
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     padding: 0.75rem;
     gap: 0.75rem;
-  }
-
-  .sidebar-left > * {
-    flex: 1;
-    min-width: 250px;
+    overflow: visible;
   }
 
   .board-area {
-    min-height: auto;
     padding: 1rem;
   }
 
   .sidebar-right {
-    max-height: none;
     border-left: none;
     border-top: 1px solid var(--border-color);
   }
 
   .training-panel {
-    height: auto;
     max-height: 50vh;
   }
 
@@ -728,10 +992,6 @@ button:disabled {
 @media (max-width: 640px) {
   .sidebar-left {
     flex-direction: column;
-  }
-
-  .sidebar-left > * {
-    min-width: 0;
   }
 
   .board-area {
