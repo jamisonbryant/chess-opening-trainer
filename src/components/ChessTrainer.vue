@@ -382,12 +382,16 @@ async function handleExplanation(explanation: string) {
       <main class="board-area">
         <div class="board-center">
           <div class="board-and-chat">
-            <TheChessboard
-              v-if="training.phase !== 'idle'"
-              :board-config="boardConfig"
-              @board-created="(api) => (boardAPI = api)"
-              @move="handleMove"
-            />
+            <div class="board-wrapper" :class="{ idle: training.phase === 'idle' }">
+              <TheChessboard
+                :board-config="boardConfig"
+                @board-created="(api) => (boardAPI = api)"
+                @move="handleMove"
+              />
+              <div v-if="training.phase === 'idle'" class="board-overlay">
+                <span>Pick an opening to begin...</span>
+              </div>
+            </div>
 
             <div v-if="training.phase !== 'idle'" class="chat-column">
               <TrainingPanel

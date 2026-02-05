@@ -49,7 +49,7 @@ function renderMarkdown(text: string): string {
 
 <template>
   <div class="training-panel">
-    <h2>Trainer</h2>
+    <h2>Trainer Chat</h2>
 
     <div class="messages" ref="messagesContainer">
       <div
