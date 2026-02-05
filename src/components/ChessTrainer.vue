@@ -20,30 +20,11 @@ const settings = useSettingsStore()
 const boardAPI = ref<BoardApi>()
 const chess = ref(new Chess())
 const stockfish = ref<StockfishService>()
-const MESSAGES_KEY = 'chess-trainer-messages'
 
-function loadMessages(): Array<{ role: 'trainer' | 'user' | 'system'; text: string }> {
-  try {
-    const raw = sessionStorage.getItem(MESSAGES_KEY)
-    if (!raw) return []
-    return JSON.parse(raw)
-  } catch {
-    return []
-  }
-}
-
-const messages = ref<Array<{ role: 'trainer' | 'user' | 'system'; text: string }>>(
-  training.restoredFromSession ? loadMessages() : []
-)
+const messages = ref<Array<{ role: 'trainer' | 'user' | 'system'; text: string }>>([])
 const pendingUserMove = ref<string | null>(null)
 const playedMoves = ref<string[]>([])
 const viewingPly = ref<number | null>(null)
-
-watch(messages, (msgs) => {
-  if (training.phase !== 'idle') {
-    sessionStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs))
-  }
-}, { deep: true })
 
 
 function syncPlayedMoves() {
@@ -55,6 +36,7 @@ function goToPly(ply: number | null) {
   if (ply === null || ply >= playedMoves.value.length) {
     viewingPly.value = null
     boardAPI.value?.setPosition(chess.value.fen())
+    training.syncQueryParams()
     return
   }
   if (ply < 0) ply = 0
@@ -65,6 +47,7 @@ function goToPly(ply: number | null) {
     temp.move(moves[i]!)
   }
   boardAPI.value?.setPosition(temp.fen())
+  training.syncQueryParams(ply)
 }
 
 function goToStart() { goToPly(0) }
@@ -120,8 +103,8 @@ onMounted(async () => {
     })
   }
 
-  // Restore board state from a persisted session
-  if (training.restoredFromSession && training.currentOpening) {
+  // Restore board state from URL query params
+  if (training.restoredFromUrl && training.currentOpening) {
     const opening = training.currentOpening
     chess.value = new Chess()
 
@@ -129,6 +112,11 @@ onMounted(async () => {
       chess.value.move(opening.mainLine[i]!)
     }
     syncPlayedMoves()
+
+    messages.value.push({
+      role: 'trainer',
+      text: `Resuming the ${opening.name}. You're playing as ${training.userColor}, move ${training.currentMoveIndex} of ${opening.mainLine.length}.`,
+    })
 
     // The board component renders asynchronously; wait for boardAPI to be set
     const unwatch = watch(boardAPI, (api) => {
@@ -138,6 +126,7 @@ onMounted(async () => {
         api.toggleOrientation()
       }
       unwatch()
+      nextTick(() => playOpponentMovesIfNeeded())
     }, { immediate: true })
 
     training.clearRestoredFlag()
@@ -176,7 +165,6 @@ watch(
       chess.value = new Chess()
       syncPlayedMoves()
       messages.value = []
-      sessionStorage.removeItem(MESSAGES_KEY)
       boardAPI.value?.resetBoard()
     }
   }

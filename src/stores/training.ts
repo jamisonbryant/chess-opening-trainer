@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { getOpening, type Opening } from '../data/openings'
 
 export interface TrainingExchange {
@@ -20,57 +20,54 @@ export type TrainingPhase =
 
 export type UserColor = 'white' | 'black'
 
-const SESSION_KEY = 'chess-trainer-session'
-
-interface PersistedSession {
-  openingId: string | null
+interface QueryParamState {
+  openingId: string
+  moveIndex: number
   userColor: UserColor
-  currentMoveIndex: number
-  history: TrainingExchange[]
-  phase: TrainingPhase
 }
 
-const hasSessionStorage = typeof sessionStorage !== 'undefined'
+const hasBrowserApi = typeof window !== 'undefined' && typeof window.location !== 'undefined'
 
-function loadSession(): PersistedSession | null {
-  if (!hasSessionStorage) return null
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as PersistedSession
-  } catch {
-    return null
-  }
+function readQueryParams(): QueryParamState | null {
+  if (!hasBrowserApi) return null
+  const params = new URLSearchParams(window.location.search)
+  const opening = params.get('op')
+  const move = params.get('mv')
+  const color = params.get('c')
+
+  if (!opening) return null
+
+  const openingData = getOpening(opening)
+  if (!openingData) return null
+
+  const moveIndex = move !== null ? parseInt(move, 10) : 0
+  if (isNaN(moveIndex) || moveIndex < 0) return null
+
+  const clampedMove = Math.min(moveIndex, openingData.mainLine.length)
+  const validColor: UserColor = color === 'black' ? 'black' : 'white'
+
+  return { openingId: opening, moveIndex: clampedMove, userColor: validColor }
+}
+
+function writeQueryParams(openingId: string, moveIndex: number, userColor: UserColor) {
+  if (!hasBrowserApi) return
+  const params = new URLSearchParams()
+  params.set('op', openingId)
+  params.set('mv', String(moveIndex))
+  params.set('c', userColor)
+  const url = `${window.location.pathname}?${params.toString()}`
+  window.history.replaceState({}, '', url)
 }
 
 export const useTrainingStore = defineStore('training', () => {
-  const saved = loadSession()
-  // If the saved phase was mid-interaction (explaining/evaluating), fall back to playing
-  const restoredPhase = saved
-    ? (saved.phase === 'explaining' || saved.phase === 'evaluating' ? 'playing' : saved.phase)
-    : 'idle'
+  const urlState = readQueryParams()
 
-  const openingId = ref<string | null>(saved?.openingId ?? null)
-  const userColor = ref<UserColor>(saved?.userColor ?? 'white')
-  const currentMoveIndex = ref(saved?.currentMoveIndex ?? 0)
-  const history = ref<TrainingExchange[]>(saved?.history ?? [])
-  const phase = ref<TrainingPhase>(restoredPhase)
-  const restoredFromSession = ref(saved !== null && restoredPhase !== 'idle')
-
-  function persist() {
-    const data: PersistedSession = {
-      openingId: openingId.value,
-      userColor: userColor.value,
-      currentMoveIndex: currentMoveIndex.value,
-      history: history.value,
-      phase: phase.value,
-    }
-    if (hasSessionStorage) {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
-    }
-  }
-
-  watch([openingId, userColor, currentMoveIndex, history, phase], persist, { deep: true })
+  const openingId = ref<string | null>(urlState?.openingId ?? null)
+  const userColor = ref<UserColor>(urlState?.userColor ?? 'white')
+  const currentMoveIndex = ref(urlState?.moveIndex ?? 0)
+  const history = ref<TrainingExchange[]>([])
+  const phase = ref<TrainingPhase>(urlState ? 'playing' : 'idle')
+  const restoredFromUrl = ref(urlState !== null)
 
   const currentOpening = computed<Opening | undefined>(() =>
     openingId.value ? getOpening(openingId.value) : undefined
@@ -98,12 +95,19 @@ export const useTrainingStore = defineStore('training', () => {
     return currentMoveIndex.value / opening.mainLine.length
   })
 
+  function syncQueryParams(moveOverride?: number) {
+    if (!openingId.value) return
+    const move = moveOverride ?? currentMoveIndex.value
+    writeQueryParams(openingId.value, move, userColor.value)
+  }
+
   function startSession(id: string, color: UserColor) {
     openingId.value = id
     userColor.value = color
     currentMoveIndex.value = 0
     history.value = []
     phase.value = 'playing'
+    syncQueryParams()
   }
 
   function advanceMove() {
@@ -111,6 +115,7 @@ export const useTrainingStore = defineStore('training', () => {
     if (isComplete.value) {
       phase.value = 'complete'
     }
+    syncQueryParams()
   }
 
   function setPhase(p: TrainingPhase) {
@@ -127,11 +132,13 @@ export const useTrainingStore = defineStore('training', () => {
     currentMoveIndex.value = 0
     history.value = []
     phase.value = 'idle'
-    if (hasSessionStorage) sessionStorage.removeItem(SESSION_KEY)
+    if (hasBrowserApi) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }
 
   function clearRestoredFlag() {
-    restoredFromSession.value = false
+    restoredFromUrl.value = false
   }
 
   return {
@@ -140,12 +147,13 @@ export const useTrainingStore = defineStore('training', () => {
     currentMoveIndex,
     history,
     phase,
-    restoredFromSession,
+    restoredFromUrl,
     currentOpening,
     isUserTurn,
     expectedMove,
     isComplete,
     progress,
+    syncQueryParams,
     startSession,
     advanceMove,
     setPhase,
