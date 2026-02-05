@@ -247,9 +247,153 @@ button:disabled {
   filter: invert(1);
 }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .top-nav h1 {
   margin: 0;
   font-size: 1.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   About Modal (Top Nav)
+   -------------------------------------------------------------------------- */
+
+.about-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.about-toggle:hover {
+  background: var(--bg-card-hover);
+  transform: none;
+}
+
+.about-icon {
+  color: var(--text-secondary);
+}
+
+.about-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.about-modal {
+  position: relative;
+  width: 360px;
+  max-width: 90vw;
+  padding: 1.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.about-modal h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.about-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.about-close:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  transform: none;
+}
+
+.about-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+
+.about-details dt {
+  color: var(--text-faint);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+.about-details dd {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.about-details a {
+  color: var(--accent-gold);
+  text-decoration: none;
+}
+
+.about-details a:hover {
+  text-decoration: underline;
+}
+
+.about-description {
+  margin: 0;
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.kofi-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.775rem;
+  color: var(--text-faint);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  text-decoration: none;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.kofi-link:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold-dim);
+}
+
+.kofi-icon {
+  flex-shrink: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -728,14 +872,7 @@ button:disabled {
 .color-btn.active {
   background: var(--bg-card-active);
   border-color: var(--accent-gold);
-}
-
-.color-btn.white.active {
-  color: #fff;
-}
-
-.color-btn.black.active {
-  color: #333;
+  color: var(--accent-gold);
 }
 
 .start-btn {
@@ -814,6 +951,14 @@ button:disabled {
   margin-bottom: 1rem;
 }
 
+.chat-empty-hint {
+  font-size: 0.825rem;
+  font-style: italic;
+  color: var(--text-faint);
+  text-align: center;
+  margin-top: 1rem;
+}
+
 /* --------------------------------------------------------------------------
    Messages Container
    -------------------------------------------------------------------------- */
@@ -882,6 +1027,15 @@ button:disabled {
   color: var(--text-muted);
   font-size: 0.8rem;
   font-style: italic;
+}
+
+/* Wrong-move messages */
+.message.wrong .message-content {
+  background-color: rgba(220, 50, 50, 0.1);
+  border-left-color: var(--accent-red);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 @keyframes messageSlideIn {
@@ -1302,6 +1456,19 @@ button:disabled {
   background-size: 25%;
 }
 
+/* Legal move indicators: use gold/yellow in light mode for visibility on green board */
+[data-theme="light"] cg-board square.move-dest {
+  background: radial-gradient(rgba(200, 170, 40, 0.7) 22%, #c8a828 0, rgba(0, 0, 0, 0.2) 0, rgba(0, 0, 0, 0) 0);
+}
+
+[data-theme="light"] cg-board square.oc.move-dest {
+  background: radial-gradient(transparent 0%, transparent 80%, rgba(200, 170, 40, 0.5) 80%);
+}
+
+[data-theme="light"] cg-board square.selected {
+  background-color: rgba(200, 170, 40, 0.35);
+}
+
 /* --------------------------------------------------------------------------
    Theme Toggle
    -------------------------------------------------------------------------- */
@@ -1380,6 +1547,27 @@ button:disabled {
 .board-and-chat .main-wrap {
   width: var(--board-size);
   height: var(--board-size);
+}
+
+/* --------------------------------------------------------------------------
+   Piece Arrival Animations
+   -------------------------------------------------------------------------- */
+
+/*
+ * Piece animations are driven by the Web Animations API in board-interaction.ts.
+ * Only the glow filter classes remain in CSS.
+ */
+
+/* Wrong-move glow: faint red drop-shadow */
+.piece-wrong-glow {
+  filter: drop-shadow(0 0 6px rgba(220, 50, 50, 0.55))
+          drop-shadow(0 0 14px rgba(220, 50, 50, 0.25));
+}
+
+/* Completion glow: blue drop-shadow */
+.piece-complete-glow {
+  filter: drop-shadow(0 0 6px rgba(60, 140, 255, 0.6))
+          drop-shadow(0 0 14px rgba(60, 140, 255, 0.3));
 }
 
 /* --------------------------------------------------------------------------

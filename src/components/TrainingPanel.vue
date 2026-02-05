@@ -12,7 +12,7 @@ const myOpenings = useMyOpeningsStore()
 const userExplanation = ref('')
 
 interface Message {
-  role: 'trainer' | 'user' | 'system'
+  role: 'trainer' | 'user' | 'system' | 'wrong'
   text: string
 }
 
@@ -77,6 +77,9 @@ function renderMarkdown(text: string): string {
     <h2>Trainer Chat</h2>
 
     <div class="messages" ref="messagesContainer">
+      <p v-if="messages.length === 0" class="chat-empty-hint">
+        Move a piece to start discussing this opening with an AI trainer.
+      </p>
       <div
         v-for="(msg, i) in messages"
         :key="i"

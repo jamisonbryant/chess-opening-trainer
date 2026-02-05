@@ -10,9 +10,11 @@ import { StockfishService } from '../services/stockfish'
 import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
 import { buildEvaluationPrompt, buildReflectionPrompt, REFLECTION_SYSTEM_PROMPT, type AiProvider } from '../services/ai'
+import { animatePieceArrival, pickRandomAnimation, type PieceAnimation } from '../services/board-interaction'
 import { X, SkipBack, ChevronLeft, ChevronRight, SkipForward, ArrowUpDown, MessageCircle } from 'lucide-vue-next'
 import logoUrl from '../assets/logo.svg'
 import OpeningSelector from './OpeningSelector.vue'
+import AboutModal from './AboutModal.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import TrainingPanel from './TrainingPanel.vue'
 
@@ -23,10 +25,12 @@ const boardAPI = ref<BoardApi>()
 const chess = ref(new Chess())
 const stockfish = ref<StockfishService>()
 
-const messages = ref<Array<{ role: 'trainer' | 'user' | 'system'; text: string }>>([])
+const messages = ref<Array<{ role: 'trainer' | 'user' | 'system' | 'wrong'; text: string }>>([])
 const pendingUserMove = ref<string | null>(null)
 const playedMoves = ref<string[]>([])
 const viewingPly = ref<number | null>(null)
+const sessionAnimation = ref<PieceAnimation>(pickRandomAnimation())
+let cancelCelebration: (() => void) | null = null
 
 // Mobile viewport detection
 const isMobilePortrait = ref(false)
@@ -87,9 +91,11 @@ function isActivePly(moveIndex: number): boolean {
   return moveIndex === playedMoves.value.length - 1
 }
 
+const BOARD_ANIM_DURATION = 300
+
 const boardConfig = ref<BoardConfig>({
   coordinates: true,
-  animation: { enabled: true, duration: 300 },
+  animation: { enabled: true, duration: BOARD_ANIM_DURATION },
 })
 
 const showWelcome = ref(localStorage.getItem('hideWelcome') !== 'true')
@@ -126,6 +132,43 @@ onMounted(async () => {
     messages.value.push({
       role: 'system',
       text: 'Stockfish failed to load. Engine analysis will be unavailable.',
+    })
+  }
+
+  // Demo helpers -- only loaded in dev mode, tree-shaken from production builds
+  if (import.meta.env.DEV) {
+    ;(window as any).__demo = {
+      makeMove(san: string) {
+        const tempChess = new Chess(chess.value.fen())
+        try {
+          tempChess.move(san)
+        } catch {
+          return { error: `Invalid move: ${san}` }
+        }
+        boardAPI.value?.setPosition(tempChess.fen())
+        handleMove({ san })
+        return { ok: true, fen: chess.value.fen() }
+      },
+      getState() {
+        return {
+          phase: training.phase,
+          fen: chess.value.fen(),
+          moveIndex: training.currentMoveIndex,
+          isUserTurn: training.isUserTurn,
+          expectedMove: training.expectedMove,
+          history: chess.value.history(),
+        }
+      },
+      submitExplanation(text: string) {
+        handleExplanation(text)
+      },
+      submitReflection(text: string) {
+        handleReflection(text)
+      },
+      get boardAPI() { return boardAPI.value },
+    }
+    import('../demo').then(({ installDemoRunner }) => {
+      installDemoRunner(messages, handleMove, training, chess, boardAPI)
     })
   }
 
@@ -192,6 +235,8 @@ watch(
   (newPhase, oldPhase) => {
     if (newPhase === 'playing' && oldPhase === 'idle') {
       // Session just started
+      if (cancelCelebration) { cancelCelebration(); cancelCelebration = null }
+      sessionAnimation.value = pickRandomAnimation()
       chess.value = new Chess()
       syncPlayedMoves()
       messages.value = []
@@ -215,7 +260,8 @@ watch(
         text: `What did you think of this opening? Do you have any questions?`,
       })
     } else if (newPhase === 'idle') {
-      // Session ended, reset board
+      // Session ended, stop celebration loop and reset board
+      if (cancelCelebration) { cancelCelebration(); cancelCelebration = null }
       chess.value = new Chess()
       syncPlayedMoves()
       messages.value = []
@@ -224,28 +270,31 @@ watch(
   }
 )
 
+const OPPONENT_MOVE_DELAY = 500
+
 function playOpponentMovesIfNeeded() {
   if (training.isComplete || training.isUserTurn) return
 
   const move = training.expectedMove
   if (!move) return
 
-  try {
-    chess.value.move(move)
-    syncPlayedMoves()
-    boardAPI.value?.setPosition(chess.value.fen())
-    const moveNum = Math.floor(training.currentMoveIndex / 2) + 1
-    const dots = training.currentMoveIndex % 2 === 0 ? '.' : '...'
-    messages.value.push({
-      role: 'system',
-      text: `Book move: ${moveNum}${dots}${move}`,
-    })
-    training.advanceMove()
-    // Check if there are more opponent moves to play
-    nextTick(() => playOpponentMovesIfNeeded())
-  } catch {
-    messages.value.push({ role: 'system', text: `Error playing book move: ${move}` })
-  }
+  setTimeout(() => {
+    try {
+      chess.value.move(move)
+      syncPlayedMoves()
+      boardAPI.value?.setPosition(chess.value.fen())
+      const moveNum = Math.floor(training.currentMoveIndex / 2) + 1
+      const dots = training.currentMoveIndex % 2 === 0 ? '.' : '...'
+      messages.value.push({
+        role: 'system',
+        text: `Book move: ${moveNum}${dots}${move}`,
+      })
+      training.advanceMove()
+      nextTick(() => playOpponentMovesIfNeeded())
+    } catch {
+      messages.value.push({ role: 'system', text: `Error playing book move: ${move}` })
+    }
+  }, OPPONENT_MOVE_DELAY)
 }
 
 function takeBack() {
@@ -287,7 +336,7 @@ function handleMove(move: { san: string }) {
 
   if (move.san === expected) {
     // Correct move — sync chess.js with board state
-    chess.value.move(move.san)
+    const result = chess.value.move(move.san)
     syncPlayedMoves()
     training.advanceMove()
     training.addExchange({
@@ -303,17 +352,30 @@ function handleMove(move: { san: string }) {
       text: `Correct! ${move.san} is the main line move.`,
     })
 
-    if (training.isComplete) return
+    if (training.isComplete) {
+      cancelCelebration = animatePieceArrival(result.to, {
+        animation: 'celebration-bounce',
+        effect: 'complete',
+        delay: BOARD_ANIM_DURATION + 50,
+        loopGap: 1200,
+      })
+      return
+    }
 
     nextTick(() => playOpponentMovesIfNeeded())
   } else {
     // Wrong move — sync chess.js so we can undo later, then ask for explanation
-    chess.value.move(move.san)
+    const result = chess.value.move(move.san)
     syncPlayedMoves()
     pendingUserMove.value = move.san
     training.setPhase('explaining')
+    animatePieceArrival(result.to, {
+      animation: sessionAnimation.value,
+      effect: 'wrong',
+      delay: BOARD_ANIM_DURATION + 50,
+    })
     messages.value.push({
-      role: 'system',
+      role: 'wrong',
       text: `You played ${move.san}. The book move is different.`,
     })
   }
@@ -390,6 +452,7 @@ async function handleExplanation(explanation: string) {
   chess.value.undo()
   syncPlayedMoves()
   boardAPI.value?.setPosition(chess.value.fen())
+  ;(boardAPI.value as any)?.board?.selectSquare(null)
 
   pendingUserMove.value = null
   training.setPhase('playing')
@@ -432,7 +495,10 @@ async function handleReflection(userMessage: string) {
         <img :src="logoUrl" alt="" class="nav-logo" />
         <h1>Chess Opening Trainer</h1>
       </div>
-      <SettingsPanel class="nav-settings" />
+      <div class="nav-right">
+        <AboutModal />
+        <SettingsPanel class="nav-settings" />
+      </div>
     </header>
 
     <div class="chess-trainer">
