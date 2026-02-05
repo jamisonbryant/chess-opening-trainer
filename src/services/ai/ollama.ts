@@ -1,5 +1,22 @@
 import { type AiProvider, SYSTEM_PROMPT } from './types'
 
+export interface OllamaModel {
+  name: string
+  size: number
+}
+
+export async function fetchOllamaModels(baseUrl: string = 'http://localhost:11434'): Promise<OllamaModel[]> {
+  const response = await fetch(`${baseUrl}/api/tags`)
+  if (!response.ok) {
+    throw new Error(`Ollama API error: ${response.status}`)
+  }
+  const data = await response.json()
+  return (data.models ?? []).map((m: { name: string; size: number }) => ({
+    name: m.name,
+    size: m.size,
+  }))
+}
+
 export class OllamaProvider implements AiProvider {
   private model: string
   private baseUrl: string
@@ -9,7 +26,7 @@ export class OllamaProvider implements AiProvider {
     this.baseUrl = baseUrl
   }
 
-  async evaluate(userPrompt: string): Promise<string> {
+  async evaluate(userPrompt: string, systemPrompt?: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -17,7 +34,7 @@ export class OllamaProvider implements AiProvider {
         model: this.model,
         stream: false,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt ?? SYSTEM_PROMPT },
           { role: 'user', content: userPrompt },
         ],
       }),

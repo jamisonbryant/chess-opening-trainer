@@ -24,8 +24,11 @@ watch(() => messages.value.length, () => {
   })
 })
 
+const userReflection = ref('')
+
 const emit = defineEmits<{
   (e: 'submit-explanation', explanation: string): void
+  (e: 'submit-reflection', message: string): void
   (e: 'take-back'): void
 }>()
 
@@ -35,10 +38,20 @@ function submitExplanation() {
   userExplanation.value = ''
 }
 
+function submitReflection() {
+  if (!userReflection.value.trim()) return
+  emit('submit-reflection', userReflection.value.trim())
+  userReflection.value = ''
+}
+
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
-    submitExplanation()
+    if (training.phase === 'reflecting') {
+      submitReflection()
+    } else {
+      submitExplanation()
+    }
   }
 }
 
@@ -79,8 +92,25 @@ function renderMarkdown(text: string): string {
       </div>
     </div>
 
+    <div v-if="training.phase === 'reflecting'" class="input-area">
+      <textarea
+        v-model="userReflection"
+        placeholder="Share your thoughts or ask a question..."
+        @keydown="handleKeydown"
+      />
+      <div class="input-actions">
+        <button @click="submitReflection" :disabled="!userReflection.trim()">
+          Submit
+        </button>
+      </div>
+    </div>
+
     <div v-if="training.phase === 'evaluating'" class="loading">
       Analyzing your move...
+    </div>
+
+    <div v-if="training.phase === 'reflecting-eval'" class="loading">
+      Thinking...
     </div>
 
     <div v-if="training.phase === 'complete'" class="complete">

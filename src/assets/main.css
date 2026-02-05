@@ -314,6 +314,28 @@ button:disabled {
   letter-spacing: 0.04em;
 }
 
+.settings-menu .field-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.settings-menu .field-error {
+  color: var(--error-text, #f87171);
+}
+
+.settings-menu .retry-btn {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
 /* --------------------------------------------------------------------------
    Chess Trainer Grid
    -------------------------------------------------------------------------- */

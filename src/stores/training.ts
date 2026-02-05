@@ -12,11 +12,13 @@ export interface TrainingExchange {
 }
 
 export type TrainingPhase =
-  | 'idle'        // no session active
-  | 'playing'     // waiting for user or auto-playing opponent move
-  | 'explaining'  // user made wrong move, asking for explanation
-  | 'evaluating'  // AI is generating response
-  | 'complete'    // reached end of main line
+  | 'idle'            // no session active
+  | 'playing'         // waiting for user or auto-playing opponent move
+  | 'explaining'      // user made wrong move, asking for explanation
+  | 'evaluating'      // AI is generating response
+  | 'reflecting'      // session done, trainer asked for thoughts, waiting for user
+  | 'reflecting-eval' // AI is generating reflection response
+  | 'complete'        // reached end of main line, reflection done
 
 export type UserColor = 'white' | 'black'
 
@@ -113,7 +115,7 @@ export const useTrainingStore = defineStore('training', () => {
   function advanceMove() {
     currentMoveIndex.value++
     if (isComplete.value) {
-      phase.value = 'complete'
+      phase.value = 'reflecting'
     }
     syncQueryParams()
   }

@@ -9,7 +9,7 @@ import { useSettingsStore } from '../stores/settings'
 import { StockfishService } from '../services/stockfish'
 import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
-import { buildEvaluationPrompt, type AiProvider } from '../services/ai'
+import { buildEvaluationPrompt, buildReflectionPrompt, REFLECTION_SYSTEM_PROMPT, type AiProvider } from '../services/ai'
 import OpeningSelector from './OpeningSelector.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import TrainingPanel from './TrainingPanel.vue'
@@ -87,7 +87,7 @@ watchEffect(() => {
 
 function getAiProvider(): AiProvider {
   if (settings.aiProvider === 'anthropic') {
-    return new AnthropicProvider(settings.anthropicApiKey)
+    return new AnthropicProvider(settings.anthropicApiKey, settings.anthropicModel)
   }
   return new OllamaProvider(settings.ollamaModel, settings.ollamaBaseUrl)
 }
@@ -160,6 +160,11 @@ watch(
       })
 
       nextTick(() => playOpponentMovesIfNeeded())
+    } else if (newPhase === 'reflecting') {
+      messages.value.push({
+        role: 'trainer',
+        text: `What did you think of this opening? Do you have any questions?`,
+      })
     } else if (newPhase === 'idle') {
       // Session ended, reset board
       chess.value = new Chess()
@@ -340,6 +345,35 @@ async function handleExplanation(explanation: string) {
   pendingUserMove.value = null
   training.setPhase('playing')
 }
+
+async function handleReflection(userMessage: string) {
+  messages.value.push({ role: 'user', text: userMessage })
+  training.setPhase('reflecting-eval')
+
+  const opening = training.currentOpening!
+  const mistakes = training.history.filter(e => !e.wasCorrect).length
+
+  const prompt = buildReflectionPrompt({
+    openingName: opening.name,
+    totalMoves: opening.mainLine.length,
+    mistakes,
+    userMessage,
+  })
+
+  try {
+    const provider = getAiProvider()
+    const response = await provider.evaluate(prompt, REFLECTION_SYSTEM_PROMPT)
+    messages.value.push({ role: 'trainer', text: response })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    messages.value.push({
+      role: 'system',
+      text: `AI error: ${message}. Check your settings.`,
+    })
+  }
+
+  training.setPhase('complete')
+}
 </script>
 
 <template>
@@ -385,6 +419,7 @@ async function handleExplanation(explanation: string) {
               <TrainingPanel
                 v-model:messages="messages"
                 @submit-explanation="handleExplanation"
+                @submit-reflection="handleReflection"
                 @take-back="takeBack"
               />
             </div>

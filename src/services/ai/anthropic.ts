@@ -1,13 +1,23 @@
 import { type AiProvider, SYSTEM_PROMPT } from './types'
 
+export const ANTHROPIC_MODELS = [
+  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+  { id: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
+  { id: 'claude-haiku-3-5-20241022', label: 'Claude 3.5 Haiku' },
+] as const
+
+export const DEFAULT_ANTHROPIC_MODEL = ANTHROPIC_MODELS[0].id
+
 export class AnthropicProvider implements AiProvider {
   private apiKey: string
+  private model: string
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model: string = DEFAULT_ANTHROPIC_MODEL) {
     this.apiKey = apiKey
+    this.model = model
   }
 
-  async evaluate(userPrompt: string): Promise<string> {
+  async evaluate(userPrompt: string, systemPrompt?: string): Promise<string> {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -17,9 +27,9 @@ export class AnthropicProvider implements AiProvider {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: this.model,
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt ?? SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
     })
