@@ -214,7 +214,8 @@ button:disabled {
 .app-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -240,15 +241,6 @@ button:disabled {
 .top-nav h1 {
   margin: 0;
   font-size: 1.25rem;
-}
-
-.top-nav .move-indicator {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--accent-gold);
-  background-color: var(--bg-card);
-  border-radius: var(--border-radius-sm);
 }
 
 /* --------------------------------------------------------------------------
@@ -331,9 +323,6 @@ button:disabled {
   min-height: 0;
 }
 
-.chess-trainer:has(.sidebar-right) {
-  grid-template-columns: var(--sidebar-width) 1fr var(--panel-width);
-}
 
 /* --------------------------------------------------------------------------
    Left Sidebar
@@ -357,11 +346,35 @@ button:disabled {
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   background-color: var(--bg-deep);
+  overflow: hidden;
+}
+
+.board-and-chat {
+  display: flex;
+  align-items: stretch;
+  height: 80vh;
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-column {
+  display: flex;
+  flex-direction: column;
+  width: var(--panel-width);
+  flex-shrink: 0;
+  background-color: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+  overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -418,17 +431,6 @@ button:disabled {
   transform: none;
 }
 
-/* --------------------------------------------------------------------------
-   Right Sidebar
-   -------------------------------------------------------------------------- */
-
-.sidebar-right {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-  border-left: 1px solid var(--border-color);
-  overflow: hidden;
-}
 
 /* --------------------------------------------------------------------------
    Opening Selector
@@ -455,7 +457,7 @@ button:disabled {
   justify-content: space-between;
   width: 100%;
   padding: 0;
-  margin-bottom: 0;
+  margin-bottom: 0.75rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -534,6 +536,13 @@ button:disabled {
   font-size: 0.8rem;
   color: var(--text-muted);
   line-height: 1.4;
+}
+
+.typeahead .dropdown-hint {
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* --------------------------------------------------------------------------
@@ -837,6 +846,26 @@ button:disabled {
   width: 100%;
 }
 
+.input-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input-actions button {
+  flex: 1;
+}
+
+.take-back-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.take-back-btn:hover {
+  background: var(--bg-card-hover);
+  transform: none;
+}
+
 /* --------------------------------------------------------------------------
    Loading & Complete States
    -------------------------------------------------------------------------- */
@@ -937,14 +966,120 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
+   Board Controls (Move History, Nav, FEN)
+   -------------------------------------------------------------------------- */
+
+.board-controls {
+  margin-top: 1rem;
+  max-width: min(70vh, 560px);
+  width: 100%;
+}
+
+.move-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--bg-primary);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  max-height: 72px;
+  min-height: 36px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.move-list .move-number {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.move-list .move-number:first-child {
+  margin-left: 0;
+}
+
+.move-list .move {
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-mono);
+  transition: background-color var(--transition-fast);
+}
+
+.move-list .move:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.move-list .move.active {
+  background-color: var(--bg-tertiary);
+  color: var(--accent-gold);
+}
+
+.move-list .no-moves {
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.board-nav {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.board-nav button {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.board-nav button:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  transform: none;
+}
+
+.viewing-history-badge {
+  margin-top: 0.4rem;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-amber);
+}
+
+.fen-display {
+  display: block;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  background-color: var(--bg-primary);
+  border-radius: var(--border-radius-sm);
+  overflow-x: auto;
+  white-space: nowrap;
+  user-select: all;
+  cursor: text;
+}
+
+/* --------------------------------------------------------------------------
    Chessboard Overrides
    -------------------------------------------------------------------------- */
 
-/* Constrain board to a reasonable max size within the center area */
+/* Size the board to 80% of viewport height */
 .board-area .main-wrap {
-  max-width: min(70vh, 560px);
-  max-height: min(70vh, 560px);
-  width: 100%;
+  width: 80vh;
+  height: 80vh;
 }
 
 /* --------------------------------------------------------------------------
@@ -971,12 +1106,14 @@ button:disabled {
     padding: 1rem;
   }
 
-  .sidebar-right {
-    border-left: none;
-    border-top: 1px solid var(--border-color);
+  .board-and-chat {
+    flex-direction: column;
   }
 
-  .training-panel {
+  .chat-column {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
     max-height: 50vh;
   }
 
@@ -998,9 +1135,13 @@ button:disabled {
     padding: 1rem;
   }
 
+  .board-and-chat {
+    height: auto;
+  }
+
   .board-area .main-wrap {
-    max-width: calc(100vw - 2rem);
-    max-height: calc(100vw - 2rem);
+    width: calc(100vw - 2rem);
+    height: calc(100vw - 2rem);
   }
 
   .board-header h1 {

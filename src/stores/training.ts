@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { getOpening, type Opening } from '../data/openings'
 
 export interface TrainingExchange {
@@ -20,12 +20,57 @@ export type TrainingPhase =
 
 export type UserColor = 'white' | 'black'
 
+const SESSION_KEY = 'chess-trainer-session'
+
+interface PersistedSession {
+  openingId: string | null
+  userColor: UserColor
+  currentMoveIndex: number
+  history: TrainingExchange[]
+  phase: TrainingPhase
+}
+
+const hasSessionStorage = typeof sessionStorage !== 'undefined'
+
+function loadSession(): PersistedSession | null {
+  if (!hasSessionStorage) return null
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as PersistedSession
+  } catch {
+    return null
+  }
+}
+
 export const useTrainingStore = defineStore('training', () => {
-  const openingId = ref<string | null>(null)
-  const userColor = ref<UserColor>('white')
-  const currentMoveIndex = ref(0)
-  const history = ref<TrainingExchange[]>([])
-  const phase = ref<TrainingPhase>('idle')
+  const saved = loadSession()
+  // If the saved phase was mid-interaction (explaining/evaluating), fall back to playing
+  const restoredPhase = saved
+    ? (saved.phase === 'explaining' || saved.phase === 'evaluating' ? 'playing' : saved.phase)
+    : 'idle'
+
+  const openingId = ref<string | null>(saved?.openingId ?? null)
+  const userColor = ref<UserColor>(saved?.userColor ?? 'white')
+  const currentMoveIndex = ref(saved?.currentMoveIndex ?? 0)
+  const history = ref<TrainingExchange[]>(saved?.history ?? [])
+  const phase = ref<TrainingPhase>(restoredPhase)
+  const restoredFromSession = ref(saved !== null && restoredPhase !== 'idle')
+
+  function persist() {
+    const data: PersistedSession = {
+      openingId: openingId.value,
+      userColor: userColor.value,
+      currentMoveIndex: currentMoveIndex.value,
+      history: history.value,
+      phase: phase.value,
+    }
+    if (hasSessionStorage) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
+    }
+  }
+
+  watch([openingId, userColor, currentMoveIndex, history, phase], persist, { deep: true })
 
   const currentOpening = computed<Opening | undefined>(() =>
     openingId.value ? getOpening(openingId.value) : undefined
@@ -82,6 +127,11 @@ export const useTrainingStore = defineStore('training', () => {
     currentMoveIndex.value = 0
     history.value = []
     phase.value = 'idle'
+    if (hasSessionStorage) sessionStorage.removeItem(SESSION_KEY)
+  }
+
+  function clearRestoredFlag() {
+    restoredFromSession.value = false
   }
 
   return {
@@ -90,6 +140,7 @@ export const useTrainingStore = defineStore('training', () => {
     currentMoveIndex,
     history,
     phase,
+    restoredFromSession,
     currentOpening,
     isUserTurn,
     expectedMove,
@@ -100,5 +151,6 @@ export const useTrainingStore = defineStore('training', () => {
     setPhase,
     addExchange,
     reset,
+    clearRestoredFlag,
   }
 })

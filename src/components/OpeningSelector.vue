@@ -4,23 +4,23 @@ import { openings, type Opening } from '../data/openings'
 import { useTrainingStore, type UserColor } from '../stores/training'
 
 const training = useTrainingStore()
-const searchQuery = ref('')
+const isTrainingActive = computed(() => training.phase !== 'idle')
+const searchQuery = ref(training.currentOpening?.name ?? '')
 const showDropdown = ref(false)
-const selectedOpening = ref<Opening | null>(null)
-const selectedColor = ref<UserColor | null>(null)
-const isCollapsed = ref(false)
+const selectedOpening = ref<Opening | null>(training.currentOpening ?? null)
+const selectedColor = ref<UserColor | null>(isTrainingActive.value ? training.userColor : null)
+const isCollapsed = ref(isTrainingActive.value)
+const MAX_RESULTS = 50
 
 const filteredOpenings = computed(() => {
-  if (!searchQuery.value.trim()) return openings
+  if (!searchQuery.value.trim()) return []
   const query = searchQuery.value.toLowerCase()
-  return openings.filter(
-    (o) =>
-      o.name.toLowerCase().includes(query) ||
-      o.description.toLowerCase().includes(query)
-  )
+  return openings.filter((o) => o.name.toLowerCase().includes(query))
 })
 
-const isTrainingActive = computed(() => training.phase !== 'idle')
+const displayedOpenings = computed(() => filteredOpenings.value.slice(0, MAX_RESULTS))
+const hasMoreResults = computed(() => filteredOpenings.value.length > MAX_RESULTS)
+const totalResults = computed(() => filteredOpenings.value.length)
 
 function selectOpening(opening: Opening) {
   selectedOpening.value = opening
@@ -36,7 +36,6 @@ function selectColor(color: UserColor) {
 function startTraining() {
   if (!selectedOpening.value || !selectedColor.value) return
   training.startSession(selectedOpening.value.id, selectedColor.value)
-  isCollapsed.value = true
 }
 
 function handleFocus() {
@@ -65,7 +64,7 @@ function resetSelection() {
 <template>
   <div class="opening-selector" :class="{ collapsed: isCollapsed && isTrainingActive }">
     <button v-if="isTrainingActive" class="selector-header" @click="toggleCollapsed">
-      <h2>{{ selectedOpening?.name }}</h2>
+      <h2>Opening</h2>
       <span class="toggle-icon">{{ isCollapsed ? '▶' : '▼' }}</span>
     </button>
     <h2 v-else>Select Opening</h2>
@@ -81,16 +80,26 @@ function resetSelection() {
           @blur="handleBlur"
         />
 
-        <div v-if="showDropdown && filteredOpenings.length > 0 && !isTrainingActive" class="dropdown">
-          <div
-            v-for="opening in filteredOpenings"
-            :key="opening.id"
-            class="dropdown-item"
-            :class="{ active: selectedOpening?.id === opening.id }"
-            @mousedown="selectOpening(opening)"
-          >
-            <div class="item-name">{{ opening.name }}</div>
-            <div class="item-description">{{ opening.description }}</div>
+        <div v-if="showDropdown && !isTrainingActive" class="dropdown">
+          <div v-if="!searchQuery.trim()" class="dropdown-hint">
+            Type to search openings...
+          </div>
+          <template v-else-if="displayedOpenings.length > 0">
+            <div
+              v-for="opening in displayedOpenings"
+              :key="opening.id"
+              class="dropdown-item"
+              :class="{ active: selectedOpening?.id === opening.id }"
+              @mousedown="selectOpening(opening)"
+            >
+              <div class="item-name">{{ opening.name }}</div>
+            </div>
+            <div v-if="hasMoreResults" class="dropdown-hint">
+              {{ totalResults - MAX_RESULTS }} more results...
+            </div>
+          </template>
+          <div v-else class="dropdown-hint">
+            No openings found
           </div>
         </div>
       </div>
@@ -135,7 +144,7 @@ function resetSelection() {
           />
         </div>
         <p>Move {{ training.currentMoveIndex }} / {{ training.currentOpening?.mainLine.length }}</p>
-        <button class="reset-btn" @click="resetSelection">Change Opening</button>
+        <button class="reset-btn" @click="resetSelection">&#8635; Start Over</button>
       </div>
     </div>
   </div>

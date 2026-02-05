@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { marked } from 'marked'
 import { useTrainingStore } from '../stores/training'
 
@@ -14,9 +14,19 @@ interface Message {
 }
 
 const messages = defineModel<Message[]>('messages', { default: () => [] })
+const messagesContainer = ref<HTMLElement>()
+
+watch(() => messages.value.length, () => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+})
 
 const emit = defineEmits<{
   (e: 'submit-explanation', explanation: string): void
+  (e: 'take-back'): void
 }>()
 
 function submitExplanation() {
@@ -41,7 +51,7 @@ function renderMarkdown(text: string): string {
   <div class="training-panel">
     <h2>Trainer</h2>
 
-    <div class="messages">
+    <div class="messages" ref="messagesContainer">
       <div
         v-for="(msg, i) in messages"
         :key="i"
@@ -59,9 +69,14 @@ function renderMarkdown(text: string): string {
         placeholder="Explain your reasoning..."
         @keydown="handleKeydown"
       />
-      <button @click="submitExplanation" :disabled="!userExplanation.trim()">
-        Submit
-      </button>
+      <div class="input-actions">
+        <button class="take-back-btn" @click="emit('take-back')">
+          &#8630; Take Back
+        </button>
+        <button @click="submitExplanation" :disabled="!userExplanation.trim()">
+          Submit
+        </button>
+      </div>
     </div>
 
     <div v-if="training.phase === 'evaluating'" class="loading">
