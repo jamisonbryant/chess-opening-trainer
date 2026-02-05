@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildEvaluationPrompt, SYSTEM_PROMPT } from '../types'
+import { buildEvaluationPrompt, buildReflectionPrompt, SYSTEM_PROMPT, REFLECTION_SYSTEM_PROMPT } from '../types'
 
 describe('AI prompt building', () => {
   it('system prompt instructs the AI to teach', () => {
@@ -24,5 +24,24 @@ describe('AI prompt building', () => {
     expect(prompt).toContain('d4')
     expect(prompt).toContain('Bc4')
     expect(prompt).toContain('develop my bishop')
+  })
+
+  it('reflection system prompt instructs wrap-up behavior', () => {
+    expect(REFLECTION_SYSTEM_PROMPT).toContain('wrapping up')
+    expect(REFLECTION_SYSTEM_PROMPT).toContain('practice session')
+  })
+
+  it('builds a structured reflection prompt', () => {
+    const prompt = buildReflectionPrompt({
+      openingName: 'Italian Game',
+      totalMoves: 10,
+      mistakes: 2,
+      userMessage: 'I found the bishop development tricky.',
+    })
+
+    expect(prompt).toContain('Italian Game')
+    expect(prompt).toContain('10 moves')
+    expect(prompt).toContain('2 mistake(s)')
+    expect(prompt).toContain('bishop development tricky')
   })
 })

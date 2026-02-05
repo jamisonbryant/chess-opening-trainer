@@ -92,4 +92,17 @@ describe('parseOpeningsTsv', () => {
     const result = parseOpeningsTsv(tsv)
     expect(result).toHaveLength(1)
   })
+
+  it('skips lines with missing name or pgn fields', () => {
+    const tsv = [
+      'eco\tname\tpgn',
+      'C50',
+      'C50\tItalian Game',
+      'C50\tItalian Game\t1. e4 e5 2. Nf3 Nc6 3. Bc4',
+    ].join('\n')
+
+    const result = parseOpeningsTsv(tsv)
+    expect(result).toHaveLength(1)
+    expect(result[0]!.name).toBe('Italian Game')
+  })
 })
