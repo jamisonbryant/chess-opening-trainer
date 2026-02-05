@@ -374,8 +374,9 @@ button:disabled {
 }
 
 .kofi-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   margin-top: 1rem;
   padding: 0.35rem 0.75rem;
@@ -492,6 +493,7 @@ button:disabled {
 .chess-trainer {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: 1fr;
   gap: 0;
   flex: 1;
   min-height: 0;
@@ -526,15 +528,21 @@ button:disabled {
   background-color: var(--bg-deep);
   overflow: hidden;
   min-height: 0;
+  container-type: size;
 }
 
 .board-center {
-  --board-max-h: calc(100vh - 9.5rem);
-  --board-max-w: calc(100vw - var(--sidebar-width) - var(--panel-width) - 6rem);
+  --board-max-h: calc(100cqh - 4rem);
+  --board-max-w: calc(100cqw - 4rem);
   --board-size: min(var(--board-max-h), var(--board-max-w));
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+
+/* When the chat panel is visible, reserve space for it */
+.board-center:has(.chat-column) {
+  --board-max-w: calc(100cqw - var(--panel-width) - 4rem);
 }
 
 .board-and-chat {
@@ -1500,39 +1508,110 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
-   Idle Board State
+   Board Wrapper
    -------------------------------------------------------------------------- */
 
 .board-wrapper {
   position: relative;
 }
 
-.board-wrapper.idle {
-  pointer-events: none;
-  filter: grayscale(0.8) brightness(0.6);
-}
+/* --------------------------------------------------------------------------
+   Opening Selection View (idle state)
+   -------------------------------------------------------------------------- */
 
-.board-overlay {
-  position: absolute;
-  inset: 0;
+.selection-view {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 10;
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--bg-deep);
+  padding: 2.5rem 1.5rem;
 }
 
-.board-overlay span {
-  padding: 1.25rem 2.5rem;
+.selection-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.selection-logo {
+  height: 4rem;
+  width: auto;
+  filter: invert(1);
+  margin-bottom: 0.75rem;
+}
+
+[data-theme="light"] .selection-logo {
+  filter: none;
+}
+
+.selection-title {
+  margin: 0 0 0.4rem;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
-  background-color: rgba(0, 0, 0, 0.55);
-  border-radius: var(--border-radius-lg);
-  letter-spacing: 0.03em;
+  letter-spacing: -0.01em;
 }
 
-[data-theme="light"] .board-overlay span {
-  background-color: rgba(255, 255, 255, 0.6);
+.selection-tagline {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.selection-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+}
+
+.selection-welcome {
+  position: relative;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.selection-welcome h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+}
+
+.welcome-icon {
+  flex-shrink: 0;
+}
+
+.selection-welcome ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.selection-welcome li {
+  margin-bottom: 0.35rem;
+  line-height: 1.4;
+}
+
+.selection-welcome li strong {
+  color: var(--accent-gold);
+}
+
+.selection-my-openings {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
 }
 
 [data-theme="light"] .nav-logo {
@@ -1717,6 +1796,7 @@ button:disabled {
     width: 28px;
     height: 28px;
   }
+
 }
 
 /* --------------------------------------------------------------------------
@@ -1777,9 +1857,24 @@ button:disabled {
     margin-bottom: 0.5rem;
   }
 
-  .board-overlay span {
-    font-size: 1.25rem;
-    padding: 0.75rem 1.5rem;
+  .selection-view {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .selection-logo {
+    height: 3rem;
+  }
+
+  .selection-title {
+    font-size: 1.5rem;
+  }
+
+  .selection-tagline {
+    font-size: 0.875rem;
+  }
+
+  .selection-card {
+    padding: 1rem;
   }
 }
 

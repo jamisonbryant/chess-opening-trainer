@@ -11,9 +11,10 @@ import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
 import { buildEvaluationPrompt, buildReflectionPrompt, REFLECTION_SYSTEM_PROMPT, type AiProvider } from '../services/ai'
 import { animatePieceArrival, pickRandomAnimation, type PieceAnimation } from '../services/board-interaction'
-import { X, SkipBack, ChevronLeft, ChevronRight, SkipForward, ArrowUpDown, MessageCircle } from 'lucide-vue-next'
+import { SkipBack, ChevronLeft, ChevronRight, SkipForward, ArrowUpDown, MessageCircle } from 'lucide-vue-next'
 import logoUrl from '../assets/logo.svg'
 import OpeningSelector from './OpeningSelector.vue'
+import OpeningSelectionView from './OpeningSelectionView.vue'
 import AboutModal from './AboutModal.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import TrainingPanel from './TrainingPanel.vue'
@@ -97,13 +98,6 @@ const boardConfig = ref<BoardConfig>({
   coordinates: true,
   animation: { enabled: true, duration: BOARD_ANIM_DURATION },
 })
-
-const showWelcome = ref(localStorage.getItem('hideWelcome') !== 'true')
-
-function dismissWelcome() {
-  showWelcome.value = false
-  localStorage.setItem('hideWelcome', 'true')
-}
 
 watchEffect(() => {
   if (training.phase !== 'idle' && training.currentOpening) {
@@ -501,38 +495,28 @@ async function handleReflection(userMessage: string) {
       </div>
     </header>
 
-    <div class="chess-trainer">
-      <aside class="sidebar-left" :class="{ 'landscape-hidden': isMobileLandscape && training.phase !== 'idle' }">
-        <div v-if="showWelcome && training.phase === 'idle'" class="welcome-banner">
-          <button class="dismiss-btn" @click="dismissWelcome" title="Dismiss"><X :size="16" /></button>
-          <h3>How to Train</h3>
-          <ol>
-            <li>Search for an opening below</li>
-            <li>Choose White or Black</li>
-            <li>Click <strong>Start Training</strong></li>
-            <li>Play moves on the board</li>
-            <li>Explain deviations to the AI coach</li>
-          </ol>
-        </div>
+    <!-- IDLE: Full-page opening selection -->
+    <OpeningSelectionView v-if="training.phase === 'idle'" />
+
+    <!-- ACTIVE TRAINING: Board + sidebar + chat -->
+    <div v-else class="chess-trainer">
+      <aside class="sidebar-left" :class="{ 'landscape-hidden': isMobileLandscape }">
         <OpeningSelector />
       </aside>
 
       <main class="board-area">
         <div class="board-center">
           <div class="board-and-chat">
-            <div class="board-wrapper" :class="{ idle: training.phase === 'idle' }">
+            <div class="board-wrapper">
               <TheChessboard
                 :board-config="boardConfig"
                 @board-created="(api) => (boardAPI = api)"
                 @move="handleMove"
               />
-              <div v-if="training.phase === 'idle'" class="board-overlay">
-                <span>Pick an opening to begin...</span>
-              </div>
             </div>
 
             <!-- Desktop / landscape inline chat -->
-            <div v-if="training.phase !== 'idle' && !isMobilePortrait" class="chat-column">
+            <div v-if="!isMobilePortrait" class="chat-column">
               <TrainingPanel
                 v-model:messages="messages"
                 @submit-explanation="handleExplanation"
@@ -542,7 +526,7 @@ async function handleReflection(userMessage: string) {
             </div>
           </div>
 
-          <div v-if="training.phase !== 'idle'" class="board-controls">
+          <div class="board-controls">
             <div class="move-list">
               <template v-for="(move, i) in playedMoves" :key="i">
                 <span v-if="i % 2 === 0" class="move-number">{{ Math.floor(i / 2) + 1 }}.</span>
@@ -565,7 +549,6 @@ async function handleReflection(userMessage: string) {
           </div>
         </div>
       </main>
-
     </div>
 
     <!-- Mobile portrait chat overlay -->
