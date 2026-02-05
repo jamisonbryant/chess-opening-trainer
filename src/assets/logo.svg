@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 0 100 100">
+  <!-- Door frame -->
+  <rect x="12" y="4" width="56" height="92" fill="none" stroke="black" stroke-width="6"/>
+
+  <!-- Door swung outward (exaggerated perspective, hinged left) -->
+  <polygon points="15,7 15,93 -18,100 -18,0" fill="black"/>
+
+  <!-- Chess pawn silhouette, centered in doorway, leaning slightly out -->
+  <g transform="rotate(8, 40, 78)" fill="black">
+    <circle cx="40" cy="21" r="10"/>
+    <path d="
+      M36,30 L36,34
+      L30,36 L30,38
+      C31,44 35,49 35,52
+      C35,59 26,67 24,71
+      L22,71 L22,78
+      Q22,80 24,80
+      L56,80
+      Q58,80 58,78
+      L58,71 L56,71
+      C54,67 45,59 45,52
+      C45,49 49,44 50,38
+      L50,36 L44,34
+      L44,30 Z
+    "/>
+  </g>
+</svg>

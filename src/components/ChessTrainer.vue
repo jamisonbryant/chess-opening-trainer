@@ -10,6 +10,7 @@ import { StockfishService } from '../services/stockfish'
 import { AnthropicProvider } from '../services/ai/anthropic'
 import { OllamaProvider } from '../services/ai/ollama'
 import { buildEvaluationPrompt, buildReflectionPrompt, REFLECTION_SYSTEM_PROMPT, type AiProvider } from '../services/ai'
+import logoUrl from '../assets/logo.svg'
 import OpeningSelector from './OpeningSelector.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import TrainingPanel from './TrainingPanel.vue'
@@ -380,6 +381,7 @@ async function handleReflection(userMessage: string) {
   <div class="app-layout">
     <header class="top-nav">
       <div class="nav-left">
+        <img :src="logoUrl" alt="" class="nav-logo" />
         <h1>Chess Opening Trainer</h1>
       </div>
       <SettingsPanel class="nav-settings" />
